@@ -1,6 +1,6 @@
 {
   "author": "Intellica Group",
-  "name": "gi-commerce-update",
+  "name": "gi-commerce-updated",
   "version": "0.7.21",
   "main": "./server/index.coffee",
   "scripts": {},
