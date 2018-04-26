@@ -1,4 +1,4 @@
-gi = require 'gi-util'
+gi = require 'gi-util-updated'
 conFac = gi.common.crudControllerFactory
 quaderno = require './quaderno'
 

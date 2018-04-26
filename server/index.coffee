@@ -1,4 +1,4 @@
-gi = require 'gi-util'
+gi = require 'gi-util-updated'
 routes = require './routes'
 controllers = require './controllers'
 modelsFactory = require './models'
