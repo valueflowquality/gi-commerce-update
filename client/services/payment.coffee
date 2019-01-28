@@ -26,6 +26,20 @@ angular.module('gi.commerce').factory 'giPayment'
           deferred.resolve(response)
       deferred.promise
 
+    createIntent: (chargeRequest) ->
+      deferred = $q.defer()
+
+      $http.post('/api/makeIntent', chargeRequest)
+      .success (client_secret) ->
+        deferred.resolve client_secret
+      .error (data) ->
+        msg = 'payment not completed'
+        if data.message?
+          msg = data.message
+        deferred.reject msg
+
+      deferred.promise
+
     charge: (chargeRequest) ->
       deferred = $q.defer()
       

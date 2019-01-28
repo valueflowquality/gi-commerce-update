@@ -300,7 +300,13 @@ angular.module('gi.commerce').provider 'giCart', () ->
           @saveAddress @billingAddress
         if @shippingAddress && @customer
           @saveAddress @shippingAddress
-        cart.stage += 1
+        if cart.stage == 2
+          @preparePayment(cart, (client_secret) ->
+            $rootScope.client_secret = client_secret
+            cart.stage += 1
+          )
+        else
+          cart.stage += 1
 
 
       payNow: () ->
@@ -336,6 +342,47 @@ angular.module('gi.commerce').provider 'giCart', () ->
           else
             that.makeCharge(chargeRequest, that)
 
+      preparePayment: (cart, callback) ->
+        that = @
+        chargeRequest =
+          total: that.totalCost()
+          billing: that.billingAddress
+          shipping: that.shippingAddress
+          customer: that.customer
+          currency: that.getCurrencyCode().toLowerCase()
+          tax:
+            rate: cart.tax
+            name: cart.taxName
+          items: ({id: item._data._id, name: item._data.name, purchaseType: item._data.purchaseType}) for item in cart.items
+
+        if that.company?
+          chargeRequest.company = that.company
+          exp = Util.vatRegex
+          match = exp.exec(that.company.VAT)
+          if match?
+            uri = '/api/taxRate?countryCode=' + match[1]
+            uri += '&vatNumber=' + match[0]
+            $http.get(uri).success (exemptionData) ->
+              chargeRequest.tax.rate = exemptionData?.rate or 0
+              chargeRequest.tax.name = exemptionData?.name
+              that.makeIntent(chargeRequest, that, callback)
+            .error (err) ->
+              $rootScope.$broadcast('giCart:paymentFailed', err)
+          else
+            that.makeIntent(chargeRequest, that, callback)
+        else
+          that.makeIntent(chargeRequest, that, callback)
+
+
+      makeIntent: (chargeRequest, that, callback) ->
+        Payment.stripe.createIntent(chargeRequest).then (client_secret) ->
+          callback(client_secret)
+          $rootScope.$broadcast('giCart:paymentPrepared')
+          ##giEcommerceAnalytics.sendTransaction({ step: 4, option: 'Transaction Complete'}, cart.items)
+          that.empty()
+          cart.stage = 4
+        , (err) ->
+          $rootScope.$broadcast('giCart:paymentFailed', err)
 
       makeCharge: (chargeRequest, that) ->
         Payment.stripe.charge(chargeRequest).then (result) ->

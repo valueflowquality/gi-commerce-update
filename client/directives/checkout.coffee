@@ -40,7 +40,7 @@ angular.module('gi.commerce').directive 'giCheckout'
 
     $scope.payNow = () ->
       $scope.inPayment = true
-      wrapSpinner(Cart.payNow()).then () ->
+      wrapSpinner(Cart.preparePayment()).then () ->
         $scope.inPayment = false
       , () ->
         $scope.inPayment = false

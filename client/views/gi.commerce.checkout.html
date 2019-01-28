@@ -27,10 +27,14 @@
     </div>
     <div class="col-xs-6">
       <div class="pull-right">
-        <div ng-if="cart.getStage() < 3" class="btn btn-primary btn-cart btn-next"
+        <div ng-if="cart.getStage() < 2" class="btn btn-primary btn-cart btn-next"
              ng-click="cart.checkAccount()"
              ng-disabled="cart.isStageInvalid(cart.getStage())"
             tabindex="9" gi-enter="{{ cart.isStageInvalid(cart.getStage()) ? '' : 'cart.checkAccount()'}}">Next</div>
+        <div ng-if="cart.getStage() == 2" class="btn btn-primary btn-cart btn-next"
+             ng-click="cart.checkAccount()"
+             ng-disabled="cart.isStageInvalid(cart.getStage())"
+             tabindex="9" gi-enter="{{ cart.isStageInvalid(cart.getStage()) ? '' : 'cart.checkAccount()'}}">Prepare Payment</div>
         <div ng-if="cart.getStage() == 3" class="btn btn-primary btn-cart pay-now"
              tabindex="9" ng-click="payNow()" gi-enter="payNow()" ng-disabled="cart.isStageInvalid(cart.getStage())">Pay Now</div>
       </div>
