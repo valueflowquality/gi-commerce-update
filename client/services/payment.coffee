@@ -26,6 +26,14 @@ angular.module('gi.commerce').factory 'giPayment'
           deferred.resolve(response)
       deferred.promise
 
+    mountElement: (id, cart) ->
+      stripe = Stripe(vfq.stripePubKey)
+      elements = stripe.elements()
+      card = elements.create('card')
+      cart.cardElement = cart
+      cart.stripe = stripe
+      card.mount(id)
+
     createIntent: (chargeRequest) ->
       deferred = $q.defer()
 

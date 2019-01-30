@@ -302,7 +302,7 @@ angular.module('gi.commerce').provider 'giCart', () ->
           @saveAddress @shippingAddress
         if cart.stage == 2
           @preparePayment(cart, (client_secret) ->
-            $rootScope.client_secret = client_secret
+            cart.client_secret = client_secret
             cart.stage += 1
           )
         else
@@ -311,36 +311,20 @@ angular.module('gi.commerce').provider 'giCart', () ->
 
       payNow: () ->
         that = @
-        Payment.stripe.getToken(that.card).then (token) ->
-          chargeRequest =
-            token: token.id
-            total: that.totalCost()
-            billing: that.billingAddress
-            shipping: that.shippingAddress
-            customer: that.customer
-            currency: that.getCurrencyCode().toLowerCase()
-            tax:
-              rate: cart.tax
-              name: cart.taxName
-            items: ({id: item._data._id, name: item._data.name, purchaseType: item._data.purchaseType}) for item in cart.items
+        deferred = $q.defer()
+        console.log that.customer
+        debugger;
+        if cart.client_secret and cart.cardElement
+          cart.stripe.handleCardPayment(
+            cart.client_secret,
+            cart.cardElement
+          ).then( (result) ->
+            debugger;
+            console.log result
 
-          if that.company?
-            chargeRequest.company = that.company
-            exp = Util.vatRegex
-            match = exp.exec(that.company.VAT)
-            if match?
-              uri = '/api/taxRate?countryCode=' + match[1]
-              uri += '&vatNumber=' + match[0]
-              $http.get(uri).success (exemptionData) ->
-                chargeRequest.tax.rate = exemptionData?.rate or 0
-                chargeRequest.tax.name = exemptionData?.name
-                that.makeCharge(chargeRequest, that)
-              .error (err) ->
-                $rootScope.$broadcast('giCart:paymentFailed', err)
-            else
-              that.makeCharge(chargeRequest, that)
-          else
-            that.makeCharge(chargeRequest, that)
+            deferred.resolve()
+          )
+        deferred.promise
 
       preparePayment: (cart, callback) ->
         that = @
@@ -376,11 +360,9 @@ angular.module('gi.commerce').provider 'giCart', () ->
 
       makeIntent: (chargeRequest, that, callback) ->
         Payment.stripe.createIntent(chargeRequest).then (client_secret) ->
-          callback(client_secret)
           $rootScope.$broadcast('giCart:paymentPrepared')
           ##giEcommerceAnalytics.sendTransaction({ step: 4, option: 'Transaction Complete'}, cart.items)
-          that.empty()
-          cart.stage = 4
+          callback(client_secret)
         , (err) ->
           $rootScope.$broadcast('giCart:paymentFailed', err)
 

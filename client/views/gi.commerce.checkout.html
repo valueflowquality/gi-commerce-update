@@ -4,7 +4,7 @@
     <gi-cart ng-if="cart.getStage() == 1" model="model" stage="1"></gi-cart>
     <gi-customer-info ng-if="cart.getStage() == 2" model="model" stage="2">
     </gi-customer-info>
-    <div ng-if="cart.getStage() == 3" >
+    <div ng-if="cart.getStage() == 3 ">
       <div class="row">
         <div class="col-md-4 col-md-push-8">
           <gi-order-summary></gi-order-summary>
@@ -14,7 +14,7 @@
         </div>
       </div>
     </div>
-    <div ng-if="cart.getStage() == 4">
+    <div ng-if="cart.getStage() == 4" ng-init="cart.client_secret = undefined">
       <gi-payment-thanks></gi-payment-thanks>
     </div>
   </div>

@@ -1,6 +1,6 @@
 angular.module('gi.commerce').directive 'giPaymentInfo'
-, ['$window', 'giCart'
-, ($window, Cart) ->
+, ['$window', 'giCart', 'giPayment'
+, ($window, Cart, Payment) ->
   restrict : 'E'
   templateUrl: 'gi.commerce.paymentInfo.html'
   scope:
@@ -10,6 +10,7 @@ angular.module('gi.commerce').directive 'giPaymentInfo'
     $scope.cart = Cart
 
     Cart.sendCart('Viewed Card Details')
+    Payment.stripe.mountElement('#card-element', $scope.cart)
 
     $scope.getCreditFont = () ->
       switch $scope.cardForm.cardNumber.$giCcEagerType
@@ -38,9 +39,11 @@ angular.module('gi.commerce').directive 'giPaymentInfo'
 
     $scope.isPayNowEnabled = () ->
       $scope.cardForm.$valid
-
+    ###
     $scope.$watch 'cardForm.$valid', (valid) ->
       $scope.cart.setStageValidity($scope.stage, valid)
+
+    ###
 
     scrollToTop = () ->
       $window.scrollTo(0,0)
