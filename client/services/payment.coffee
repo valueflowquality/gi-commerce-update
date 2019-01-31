@@ -1,8 +1,17 @@
 angular.module('gi.commerce').factory 'giPayment'
-, [ '$q', '$http'
-, ($q, $http) ->
+, [ '$q', '$http', 'giCart'
+, ($q, $http, Cart) ->
+
+  stripeInstance = undefined
 
   stripe:
+    createStripeInstance: (key) ->
+      stripeInstance = Stripe(key)
+      stripeInstance
+
+    getStripeInstance: () ->
+      stripeInstance
+
     setKey: (key) ->
       Stripe.setPublishableKey(key)
 
@@ -26,12 +35,14 @@ angular.module('gi.commerce').factory 'giPayment'
           deferred.resolve(response)
       deferred.promise
 
-    mountElement: (id, cart) ->
-      stripe = Stripe(vfq.stripePubKey)
-      elements = stripe.elements()
+    mountElement: (id) ->
+      stripeIns = @getStripeInstance()
+
+      if not stripeIns
+        stripeIns = @createStripeInstance(vfq.stripePubKey)
+      elements = stripeIns.elements()
       card = elements.create('card')
-      cart.cardElement = cart
-      cart.stripe = stripe
+      Cart.saveCardElement(card)
       card.mount(id)
 
     createIntent: (chargeRequest) ->

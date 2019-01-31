@@ -308,6 +308,11 @@ angular.module('gi.commerce').provider 'giCart', () ->
         else
           cart.stage += 1
 
+      saveCardElement: (el) ->
+        cart.cardElement = el
+
+      getCardElement: () ->
+        cart.cardElement
 
       payNow: () ->
         that = @

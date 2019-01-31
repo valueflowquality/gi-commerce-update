@@ -10,7 +10,7 @@ angular.module('gi.commerce').directive 'giPaymentInfo'
     $scope.cart = Cart
 
     Cart.sendCart('Viewed Card Details')
-    Payment.stripe.mountElement('#card-element', $scope.cart)
+    Payment.stripe.mountElement('#card-element', Cart)
 
     $scope.getCreditFont = () ->
       switch $scope.cardForm.cardNumber.$giCcEagerType
