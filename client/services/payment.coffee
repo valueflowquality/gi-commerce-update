@@ -1,6 +1,6 @@
 angular.module('gi.commerce').factory 'giPayment'
-, [ '$q', '$http', 'giCart'
-, ($q, $http, Cart) ->
+, [ '$q', '$http'
+, ($q, $http) ->
 
   stripeInstance = undefined
 
@@ -35,7 +35,7 @@ angular.module('gi.commerce').factory 'giPayment'
           deferred.resolve(response)
       deferred.promise
 
-    mountElement: (id) ->
+    mountElement: (id, Cart) ->
       stripeIns = @getStripeInstance()
 
       if not stripeIns
