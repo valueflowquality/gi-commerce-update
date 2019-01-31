@@ -10,7 +10,11 @@ angular.module('gi.commerce').factory 'giPayment'
       stripeInstance
 
     getStripeInstance: () ->
-      stripeInstance
+      if stripeInstance
+        stripeInstance
+      else
+        @createStripeInstance(vfq.stripePubKey)
+        stripeInstance
 
     setKey: (key) ->
       Stripe.setPublishableKey(key)
@@ -37,9 +41,6 @@ angular.module('gi.commerce').factory 'giPayment'
 
     mountElement: (id, Cart) ->
       stripeIns = @getStripeInstance()
-
-      if not stripeIns
-        stripeIns = @createStripeInstance(vfq.stripePubKey)
       elements = stripeIns.elements()
       card = elements.create('card')
       Cart.saveCardElement(card)

@@ -6,11 +6,9 @@ angular.module('gi.commerce').provider 'giCart', () ->
 
   @$get = ['$q', '$rootScope', '$http', 'giCartItem', 'giLocalStorage'
   , 'giCountry', 'giCurrency', 'giPayment', 'giMarket', 'giUtil', '$window', 'giEcommerceAnalytics', 'giDiscountCode'
-  , ($q, $rootScope, $http, giCartItem, store, Country, Currency, Payment
-  , Market, Util, $window, giEcommerceAnalytics, Discount) ->
+  , '$injector', ($q, $rootScope, $http, giCartItem, store, Country, Currency, Payment
+  , Market, Util, $window, giEcommerceAnalytics, Discount, $injector) ->
     cart = {}
-
-
 
     getPricingInfo = () ->
       marketCode: cart.market.code
@@ -293,6 +291,14 @@ angular.module('gi.commerce').provider 'giCart', () ->
       continueShopping: () ->
         $window.history.back()
 
+      stopSpinner: () ->
+        $injector.get('AuthService').stop('gi-cart-spinner-1')
+        cart.setValidity true
+
+      wrapSpinner: () ->
+        cart.setValidity false
+        $injector.get('AuthService').spin('gi-cart-spinner-1')
+
       checkAccount: () ->
         if @customerInfo and (not @customer)
           $rootScope.$broadcast('giCart:accountRequired', @customerInfo)
@@ -301,9 +307,11 @@ angular.module('gi.commerce').provider 'giCart', () ->
         if @shippingAddress && @customer
           @saveAddress @shippingAddress
         if cart.stage == 2
+          cart.wrapSpinner()
           @preparePayment(cart, (client_secret) ->
             cart.client_secret = client_secret
             cart.stage += 1
+            cart.stopSpinner()
           )
         else
           cart.stage += 1
@@ -319,12 +327,12 @@ angular.module('gi.commerce').provider 'giCart', () ->
         deferred = $q.defer()
         console.log that.customer
         if cart.client_secret and cart.cardElement
-          cart.stripe.handleCardPayment(
+          stripeIns = Payment.stripe.getStripeInstance()
+          stripeIns.handleCardPayment(
             cart.client_secret,
             cart.cardElement
           ).then( (result) ->
             console.log result
-
             deferred.resolve()
           )
         deferred.promise
