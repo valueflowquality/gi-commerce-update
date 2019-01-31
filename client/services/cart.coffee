@@ -318,13 +318,11 @@ angular.module('gi.commerce').provider 'giCart', () ->
         that = @
         deferred = $q.defer()
         console.log that.customer
-        debugger;
         if cart.client_secret and cart.cardElement
           cart.stripe.handleCardPayment(
             cart.client_secret,
             cart.cardElement
           ).then( (result) ->
-            debugger;
             console.log result
 
             deferred.resolve()
