@@ -1095,7 +1095,7 @@ angular.module('gi.commerce').provider('giCart', function() {
     return thankyouDirective = d;
   };
   this.$get = [
-    '$q', '$rootScope', '$http', 'giCartItem', 'giLocalStorage', 'giCountry', 'giCurrency', 'giPayment', 'giMarket', 'giUtil', '$window', 'giEcommerceAnalytics', 'giDiscountCode', function($q, $rootScope, $http, giCartItem, store, Country, Currency, Payment, Market, Util, $window, giEcommerceAnalytics, Discount) {
+    '$q', '$rootScope', '$http', 'giCartItem', 'giLocalStorage', 'giCountry', 'giCurrency', 'giPayment', 'giMarket', 'giUtil', '$window', 'giEcommerceAnalytics', 'giDiscountCode', '$injector', function($q, $rootScope, $http, giCartItem, store, Country, Currency, Payment, Market, Util, $window, giEcommerceAnalytics, Discount, $injector) {
       var c, calculateTaxRate, cart, getItemById, getPricingInfo, getSubTotal, getTaxTotal, init, save;
       cart = {};
       getPricingInfo = function() {
@@ -1395,6 +1395,14 @@ angular.module('gi.commerce').provider('giCart', function() {
         continueShopping: function() {
           return $window.history.back();
         },
+        stopSpinner: function() {
+          $injector.get('AuthService').stop('gi-cart-spinner-1');
+          return cart.setValidity(true);
+        },
+        wrapSpinner: function() {
+          cart.setValidity(false);
+          return $injector.get('AuthService').spin('gi-cart-spinner-1');
+        },
         checkAccount: function() {
           if (this.customerInfo && (!this.customer)) {
             $rootScope.$broadcast('giCart:accountRequired', this.customerInfo);
@@ -1406,9 +1414,11 @@ angular.module('gi.commerce').provider('giCart', function() {
             this.saveAddress(this.shippingAddress);
           }
           if (cart.stage === 2) {
+            cart.wrapSpinner();
             return this.preparePayment(cart, function(client_secret) {
               cart.client_secret = client_secret;
-              return cart.stage += 1;
+              cart.stage += 1;
+              return cart.stopSpinner();
             });
           } else {
             return cart.stage += 1;
@@ -1421,12 +1431,13 @@ angular.module('gi.commerce').provider('giCart', function() {
           return cart.cardElement;
         },
         payNow: function() {
-          var deferred, that;
+          var deferred, stripeIns, that;
           that = this;
           deferred = $q.defer();
           console.log(that.customer);
           if (cart.client_secret && cart.cardElement) {
-            cart.stripe.handleCardPayment(cart.client_secret, cart.cardElement).then(function(result) {
+            stripeIns = Payment.stripe.getStripeInstance();
+            stripeIns.handleCardPayment(cart.client_secret, cart.cardElement).then(function(result) {
               console.log(result);
               return deferred.resolve();
             });
@@ -1907,7 +1918,12 @@ angular.module('gi.commerce').factory('giPayment', [
           return stripeInstance;
         },
         getStripeInstance: function() {
-          return stripeInstance;
+          if (stripeInstance) {
+            return stripeInstance;
+          } else {
+            this.createStripeInstance(vfq.stripePubKey);
+            return stripeInstance;
+          }
         },
         setKey: function(key) {
           return Stripe.setPublishableKey(key);
@@ -1937,9 +1953,6 @@ angular.module('gi.commerce').factory('giPayment', [
         mountElement: function(id, Cart) {
           var card, elements, stripeIns;
           stripeIns = this.getStripeInstance();
-          if (!stripeIns) {
-            stripeIns = this.createStripeInstance(vfq.stripePubKey);
-          }
           elements = stripeIns.elements();
           card = elements.create('card');
           Cart.saveCardElement(card);
