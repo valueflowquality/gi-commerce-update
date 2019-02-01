@@ -293,10 +293,10 @@ angular.module('gi.commerce').provider 'giCart', () ->
 
       stopSpinner: () ->
         $injector.get('usSpinnerService').stop('gi-cart-spinner-1')
-        cart.setValidity true
+        @setValidity true
 
       wrapSpinner: () ->
-        cart.setValidity false
+        @setValidity false
         $injector.get('usSpinnerService').spin('gi-cart-spinner-1')
 
       checkAccount: () ->
