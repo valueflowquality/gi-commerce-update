@@ -292,12 +292,12 @@ angular.module('gi.commerce').provider 'giCart', () ->
         $window.history.back()
 
       stopSpinner: () ->
-        $injector.get('AuthService').stop('gi-cart-spinner-1')
+        $injector.get('usSpinnerService').stop('gi-cart-spinner-1')
         cart.setValidity true
 
       wrapSpinner: () ->
         cart.setValidity false
-        $injector.get('AuthService').spin('gi-cart-spinner-1')
+        $injector.get('usSpinnerService').spin('gi-cart-spinner-1')
 
       checkAccount: () ->
         if @customerInfo and (not @customer)
@@ -307,11 +307,12 @@ angular.module('gi.commerce').provider 'giCart', () ->
         if @shippingAddress && @customer
           @saveAddress @shippingAddress
         if cart.stage == 2
-          cart.wrapSpinner()
+          that = @
+          @wrapSpinner()
           @preparePayment(cart, (client_secret) ->
             cart.client_secret = client_secret
             cart.stage += 1
-            cart.stopSpinner()
+            that.stopSpinner()
           )
         else
           cart.stage += 1
@@ -332,8 +333,18 @@ angular.module('gi.commerce').provider 'giCart', () ->
             cart.client_secret,
             cart.cardElement
           ).then( (result) ->
-            console.log result
-            deferred.resolve()
+            console.log result.paymentIntent
+            if result.paymentIntent
+              $rootScope.$broadcast('giCart:paymentCompleted')
+              giEcommerceAnalytics.sendTransaction({ step: 4, option: 'Transaction Complete'}, cart.items)
+              console.log result.paymentIntent
+              that.nextStage()
+              that.empty()
+              deferred.resolve()
+            else
+              if result.error
+                $rootScope.$broadcast('giCart:paymentFailed', result.error)
+              deferred.reject()
           )
         deferred.promise
 

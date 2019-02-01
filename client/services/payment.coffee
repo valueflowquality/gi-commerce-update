@@ -6,7 +6,10 @@ angular.module('gi.commerce').factory 'giPayment'
 
   stripe:
     createStripeInstance: (key) ->
-      stripeInstance = Stripe(key)
+      if Stripe.StripeV3
+        stripeInstance = Stripe.StripeV3(key, {betas: ['payment_intent_beta_3']});
+      else
+        stripeInstance = Stripe(key, {betas: ['payment_intent_beta_3']})
       stripeInstance
 
     getStripeInstance: () ->
