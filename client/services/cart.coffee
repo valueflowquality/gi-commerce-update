@@ -308,17 +308,21 @@ angular.module('gi.commerce').provider 'giCart', () ->
             cart.stage += 1
             that.stopSpinner()
           )
-        onRegisterFailed = () ->
-          that.stopSpinner()
 
         if @customerInfo and (not @customer)
-          $rootScope.$broadcast('giCart:accountRequired', @customerInfo, onPreparePayment, onRegisterFailed)
+          $rootScope.$on 'event:auth-login-complete', (e, me) ->
+            console.log('event:auth-login-complete: ', e)
+            that.setCustomer(me)
+            onPreparePayment()
+          $rootScope.$broadcast('giCart:accountRequired', @customerInfo)
+
         if @billingAddress && @customer
           @saveAddress @billingAddress
         if @shippingAddress && @customer
           @saveAddress @shippingAddress
         if cart.stage == 2
-          onPreparePayment()
+          if @customerInfo and @customer
+            onPreparePayment()
         else
           cart.stage += 1
 

@@ -1404,7 +1404,7 @@ angular.module('gi.commerce').provider('giCart', function() {
           return $injector.get('usSpinnerService').spin('gi-cart-spinner-1');
         },
         checkAccount: function() {
-          var onPreparePayment, onRegisterFailed, that;
+          var onPreparePayment, that;
           that = this;
           onPreparePayment = function() {
             that.wrapSpinner();
@@ -1414,11 +1414,13 @@ angular.module('gi.commerce').provider('giCart', function() {
               return that.stopSpinner();
             });
           };
-          onRegisterFailed = function() {
-            return that.stopSpinner();
-          };
           if (this.customerInfo && (!this.customer)) {
-            $rootScope.$broadcast('giCart:accountRequired', this.customerInfo, onPreparePayment, onRegisterFailed);
+            $rootScope.$on('event:auth-login-complete', function(e, me) {
+              console.log('event:auth-login-complete: ', e);
+              that.setCustomer(me);
+              return onPreparePayment();
+            });
+            $rootScope.$broadcast('giCart:accountRequired', this.customerInfo);
           }
           if (this.billingAddress && this.customer) {
             this.saveAddress(this.billingAddress);
@@ -1427,7 +1429,9 @@ angular.module('gi.commerce').provider('giCart', function() {
             this.saveAddress(this.shippingAddress);
           }
           if (cart.stage === 2) {
-            return onPreparePayment();
+            if (this.customerInfo && this.customer) {
+              return onPreparePayment();
+            }
           } else {
             return cart.stage += 1;
           }
