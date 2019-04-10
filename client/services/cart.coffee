@@ -300,20 +300,25 @@ angular.module('gi.commerce').provider 'giCart', () ->
         $injector.get('usSpinnerService').spin('gi-cart-spinner-1')
 
       checkAccount: () ->
+        that = @
+        onPreparePayment = () ->
+          that.wrapSpinner()
+          that.preparePayment(cart, (client_secret) ->
+            cart.client_secret = client_secret
+            cart.stage += 1
+            that.stopSpinner()
+          )
+        onRegisterFailed = () ->
+          that.stopSpinner()
+
         if @customerInfo and (not @customer)
-          $rootScope.$broadcast('giCart:accountRequired', @customerInfo)
+          $rootScope.$broadcast('giCart:accountRequired', @customerInfo, onPreparePayment, onRegisterFailed)
         if @billingAddress && @customer
           @saveAddress @billingAddress
         if @shippingAddress && @customer
           @saveAddress @shippingAddress
         if cart.stage == 2
-          that = @
-          @wrapSpinner()
-          @preparePayment(cart, (client_secret) ->
-            cart.client_secret = client_secret
-            cart.stage += 1
-            that.stopSpinner()
-          )
+          onPreparePayment()
         else
           cart.stage += 1
 
