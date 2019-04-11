@@ -36,6 +36,7 @@
                class="form-control"
                name="lastName"
                ng-model="item.lastName"
+               ng-pattern="lastNameRegex"
                required tabindex="1"/>
          <p class="control-label" ng-show="isPropertyValidationError('lastName')">
             Please enter your last name.
