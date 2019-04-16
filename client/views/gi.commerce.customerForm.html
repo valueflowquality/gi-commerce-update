@@ -39,7 +39,7 @@
                ng-pattern="lastNameRegex"
                required tabindex="1"/>
          <p class="control-label" ng-show="isPropertyValidationError('lastName')">
-            Please enter your last name.
+            Last Name must be at least 2 latin letters without numbers.
          </p>
       </div>
       <div class="form-group" ng-class="{'has-error': isPropertyValidationError('email'), 'has-success': isPropertyValidationSuccess('email')}">

@@ -10,7 +10,7 @@ angular.module('gi.commerce').directive 'giCustomerForm'
   templateUrl: 'gi.commerce.customerForm.html'
   link: ($scope, elem, attrs) ->
     $scope.emailRegex = Util.emailRegex
-    $scope.lastNameRegex = /([a-zA-Z]{2,}$)/
+    $scope.lastNameRegex = /(^[a-zA-Z]{2,}$)/
     $scope.cart = Cart
     if not $scope.item?
       $scope.item = {}
