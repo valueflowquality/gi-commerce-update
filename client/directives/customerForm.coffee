@@ -21,9 +21,24 @@ angular.module('gi.commerce').directive 'giCustomerForm'
       $scope.customerForm[prop].$dirty and
       $scope.customerForm[prop].$touched
 
-    $scope.isPropertyValidationError = (prop) ->
-      fieldUsed(prop) and
-      $scope.customerForm[prop].$invalid
+    $scope.isPropertyValidationError = (prop, needsMessage) ->
+      errorMessage = ''
+      isInvalid =
+        fieldUsed(prop) and
+        $scope.customerForm[prop].$invalid
+
+      if isInvalid
+        if prop is 'lastName'
+          if $scope.customerForm[prop].$viewValue and ($scope.customerForm[prop].$viewValue).includes(' ')
+            errorMessage = 'Field must not include spaces.'
+          else
+            errorMessage = 'Field must be at least 2 latin letters without numbers.'
+        else
+          errorMessage = "Field isn't not filled correctly."
+      if needsMessage
+        errorMessage
+      else
+        isInvalid
 
     $scope.isPropertyValidationSuccess = (prop) ->
       fieldUsed(prop) and

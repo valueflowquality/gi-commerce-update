@@ -37,7 +37,7 @@
                name="lastName"
                ng-model="item.lastName"
                ng-pattern="lastNameRegex"
-               required tabindex="1"/>
+               required tabindex="1" ng-trim="false"/>
          <p class="control-label" ng-show="isPropertyValidationError('lastName')">
             Last Name must be at least 2 latin letters without numbers.
          </p>
