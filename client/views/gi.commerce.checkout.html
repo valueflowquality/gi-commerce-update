@@ -23,7 +23,7 @@
       <div ng-if="cart.getStage() == 1" class="btn btn-primary btn-continue-shopping"
            ng-click="cart.continueShopping()" gi-enter="cart.continueShopping()">Continue Shopping</div>
       <div ng-if="cart.getStage() > 1" class="btn btn-primary"
-           ng-click="cart.prevStage()" gi-enter="cart.prevStage()" ng-disabled="inPayment || cart.getStage() >= 3">Back</div>
+           ng-click="cart.prevStage()" gi-enter="cart.prevStage()" ng-disabled="inPayment || cart.getStage() >= 4">Back</div>
     </div>
     <div class="col-xs-6">
       <div class="pull-right">
