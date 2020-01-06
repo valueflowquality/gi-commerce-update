@@ -48,6 +48,7 @@ angular.module('gi.commerce').provider 'giCart', () ->
         taxExempt: false
         items : []
         stage: 1
+        paymentType: 1
         validStages: {}
         isValid: true
         country:
@@ -189,6 +190,12 @@ angular.module('gi.commerce').provider 'giCart', () ->
         if stage > 0 and stage < 4
           cart.stage = stage
 
+      getPaymentType: () ->
+        return cart.paymentType
+
+      setPaymentType: (paymentType) ->
+        cart.paymentType = paymentType
+
       setStageValidity: (stage, valid) ->
         cart.validStages[stage] = valid
 
@@ -322,7 +329,11 @@ angular.module('gi.commerce').provider 'giCart', () ->
           @saveAddress @shippingAddress
         if cart.stage == 2
           if @customerInfo and @customer
-            onPreparePayment()
+            if cart.paymentType == 2
+              that.empty()
+              cart.stage += 2
+            else
+              onPreparePayment()
         else
           cart.stage += 1
 

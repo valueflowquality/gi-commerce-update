@@ -12,6 +12,7 @@ angular.module('gi.commerce').directive 'giCustomerForm'
     $scope.emailRegex = Util.emailRegex
     $scope.lastNameRegex = /(^[a-zA-Z]{2,}$)/
     $scope.cart = Cart
+    $scope.cart.paymentType = $scope.cart.getPaymentType()
     if not $scope.item?
       $scope.item = {}
     $scope.requestLogin = () ->

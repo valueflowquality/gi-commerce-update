@@ -17,9 +17,22 @@
           <label ng-click="cart.business = !cart.business">Buying for a company?  </label>
         </div>
       </div>
+      <div ng-show="cart.business" class="form-group">
+        <label class="control-label">Choose payment method<span class="req">*</span> :</label>
+        <div class="radio-menu">
+          <div class="radio-item">
+            <input type="radio" ng-model="cart.paymentType" ng-change="cart.setPaymentType(1)" ng-value="1"/>
+            <label ng-click="cart.setPaymentType(1); cart.paymentType=1">Card  </label>
+          </div>
+          <div class="radio-item">
+            <input type="radio" ng-model="cart.paymentType" ng-change="cart.setPaymentType(2)" ng-value="2"/>
+            <label ng-click="cart.setPaymentType(2); cart.paymentType=2">Invoice  </label>
+          </div>
+        </div>
+      </div>
     </div>
     <div class="col-md-12" ng-if="!model.me.loggedIn"  >
-      <div class="form-group" ng-class="{'has-error': isPropertyValidationError('firstName'), 'has-success': isPropertyValidationSuccess('firstName')}">
+        <div class="form-group" ng-class="{'has-error': isPropertyValidationError('firstName'), 'has-success': isPropertyValidationSuccess('firstName')}">
         <label class="control-label">First Name <span class="req">*</span> :</label>
         <input type="text"
                class="form-control"
