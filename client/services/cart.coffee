@@ -316,6 +316,10 @@ angular.module('gi.commerce').provider 'giCart', () ->
             that.stopSpinner()
           )
 
+        onSubmitInvoice = () ->
+          that.wrapSpinner()
+          that.submitInvoice(cart)
+
         if @customerInfo and (not @customer)
           $rootScope.$on 'event:auth-login-complete', (e, me) ->
             console.log('event:auth-login-complete: ', e)
@@ -330,8 +334,7 @@ angular.module('gi.commerce').provider 'giCart', () ->
         if cart.stage == 2
           if @customerInfo and @customer
             if cart.paymentType == 2
-              that.empty()
-              cart.stage += 2
+              onSubmitInvoice()
             else
               onPreparePayment()
         else
@@ -399,6 +402,47 @@ angular.module('gi.commerce').provider 'giCart', () ->
         else
           that.makeIntent(chargeRequest, that, callback)
 
+      submitInvoice: (cart, callback) ->
+        that = @
+        chargeRequest =
+          total: that.totalCost()
+          billing: that.billingAddress
+          shipping: that.shippingAddress
+          customer: that.customer
+          currency: that.getCurrencyCode().toLowerCase()
+          tax:
+            rate: cart.tax
+            name: cart.taxName
+          items: ({id: item._data._id, name: item._data.name, purchaseType: item._data.purchaseType}) for item in cart.items
+
+        if that.company?
+          chargeRequest.company = that.company
+          exp = Util.vatRegex
+          match = exp.exec(that.company.VAT)
+          if match?
+            uri = '/api/taxRate?countryCode=' + match[1]
+            uri += '&vatNumber=' + match[0]
+            $http.get(uri).success (exemptionData) ->
+              chargeRequest.tax.rate = exemptionData?.rate or 0
+              chargeRequest.tax.name = exemptionData?.name
+            .error (err) ->
+              $rootScope.$broadcast('giCart:paymentFailed', err)
+              return
+
+        console.log 'Charge Request'
+        console.dir chargeRequest
+
+        $http.post('/api/submitInvoice', chargeRequest)
+        .success () ->
+          that.empty()
+          cart.stage += 2
+          that.stopSpinner()
+        .error (data) ->
+          msg = 'Invoice submission could not completed'
+          if data.message?
+            msg = data.message
+          $rootScope.$broadcast('giCart:paymentFailed', msg)
+          that.stopSpinner()
 
       makeIntent: (chargeRequest, that, callback) ->
         Payment.stripe.createIntent(chargeRequest).then (client_secret) ->

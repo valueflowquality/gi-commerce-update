@@ -15,7 +15,7 @@
           <div class="form-group">
             <div class="checkbox checkbox-success checkbox-circle">
               <input type="checkbox" ng-model="cart.differentShipping" tabindex="2">
-              <label>Ship to different address?  </label>
+              <label ng-click="cart.differentShipping = !cart.differentShipping">Ship to different address?  </label>
             </div>
           </div>
         </div>
@@ -40,7 +40,6 @@
                            options="shippingAddressOptions">
           </gi-address-form-fields>
         </div>
-      
       </div>
     </div>
   </div>

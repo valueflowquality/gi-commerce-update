@@ -67,4 +67,9 @@ angular.module('gi.commerce').directive 'giCustomerForm'
     $scope.$watch 'customerForm.$pending', (pending) ->
       if pending?
         $scope.cart.setStageValidity($scope.stage, false)
+
+    $scope.$watch 'cart.business', (business) ->
+      if !business
+        $scope.cart.setPaymentType(1)
+        $scope.cart.paymentType = $scope.cart.getPaymentType()
 ]
