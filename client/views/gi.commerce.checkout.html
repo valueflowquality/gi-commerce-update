@@ -15,7 +15,18 @@
       </div>
     </div>
     <div ng-if="cart.getStage() == 4">
-      <gi-payment-thanks></gi-payment-thanks>
+      <div ng-if="cart.getPaymentType() == 1">
+        <gi-payment-thanks></gi-payment-thanks>
+      </div>
+      <div ng-if="cart.getPaymentType() == 2">
+        <div class="row">
+          <div class="col-xs-12 col-sm-6 col-sm-offset-3 well">
+            <p>Thank you!</p>
+            <p>We've received your request. Our accounts team will prepare your invoice and we'll send it to you via email.</p>
+            <p>If you don't receive it within 3-4 days, please get in touch at education@valueflowquality.com.</p>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
   <div class="row">

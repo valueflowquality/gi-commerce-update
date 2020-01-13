@@ -48,6 +48,7 @@ angular.module('gi.commerce').provider 'giCart', () ->
         taxExempt: false
         items : []
         stage: 1
+        paymentType: 1
         validStages: {}
         isValid: true
         country:
@@ -189,6 +190,12 @@ angular.module('gi.commerce').provider 'giCart', () ->
         if stage > 0 and stage < 4
           cart.stage = stage
 
+      getPaymentType: () ->
+        return cart.paymentType
+
+      setPaymentType: (paymentType) ->
+        cart.paymentType = paymentType
+
       setStageValidity: (stage, valid) ->
         cart.validStages[stage] = valid
 
@@ -309,6 +316,10 @@ angular.module('gi.commerce').provider 'giCart', () ->
             that.stopSpinner()
           )
 
+        onSubmitInvoice = () ->
+          that.wrapSpinner()
+          that.submitInvoice(cart)
+
         if @customerInfo and (not @customer)
           $rootScope.$on 'event:auth-login-complete', (e, me) ->
             console.log('event:auth-login-complete: ', e)
@@ -322,7 +333,10 @@ angular.module('gi.commerce').provider 'giCart', () ->
           @saveAddress @shippingAddress
         if cart.stage == 2
           if @customerInfo and @customer
-            onPreparePayment()
+            if cart.paymentType == 2
+              onSubmitInvoice()
+            else
+              onPreparePayment()
         else
           cart.stage += 1
 
@@ -388,6 +402,44 @@ angular.module('gi.commerce').provider 'giCart', () ->
         else
           that.makeIntent(chargeRequest, that, callback)
 
+      submitInvoice: (cart, callback) ->
+        that = @
+        chargeRequest =
+          total: that.totalCost()
+          billing: that.billingAddress
+          shipping: that.shippingAddress
+          customer: that.customer
+          currency: that.getCurrencyCode().toLowerCase()
+          tax:
+            rate: cart.tax
+            name: cart.taxName
+          items: ({id: item._data._id, name: item._data.name, purchaseType: item._data.purchaseType}) for item in cart.items
+
+        if that.company?
+          chargeRequest.company = that.company
+          exp = Util.vatRegex
+          match = exp.exec(that.company.VAT)
+          if match?
+            uri = '/api/taxRate?countryCode=' + match[1]
+            uri += '&vatNumber=' + match[0]
+            $http.get(uri).success (exemptionData) ->
+              chargeRequest.tax.rate = exemptionData?.rate or 0
+              chargeRequest.tax.name = exemptionData?.name
+            .error (err) ->
+              $rootScope.$broadcast('giCart:paymentFailed', err)
+              return
+
+        $http.post('/api/submitInvoice', chargeRequest)
+        .success () ->
+          that.empty()
+          cart.stage += 2
+          that.stopSpinner()
+        .error (data) ->
+          msg = 'Invoice submission could not completed'
+          if data.message?
+            msg = data.message
+          $rootScope.$broadcast('giCart:paymentFailed', msg)
+          that.stopSpinner()
 
       makeIntent: (chargeRequest, that, callback) ->
         Payment.stripe.createIntent(chargeRequest).then (client_secret) ->

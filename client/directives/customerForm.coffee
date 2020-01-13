@@ -12,6 +12,7 @@ angular.module('gi.commerce').directive 'giCustomerForm'
     $scope.emailRegex = Util.emailRegex
     $scope.lastNameRegex = /(^[a-zA-Z]{2,}$)/
     $scope.cart = Cart
+    $scope.cart.paymentType = $scope.cart.getPaymentType()
     if not $scope.item?
       $scope.item = {}
     $scope.requestLogin = () ->
@@ -66,4 +67,9 @@ angular.module('gi.commerce').directive 'giCustomerForm'
     $scope.$watch 'customerForm.$pending', (pending) ->
       if pending?
         $scope.cart.setStageValidity($scope.stage, false)
+
+    $scope.$watch 'cart.business', (business) ->
+      if !business
+        $scope.cart.setPaymentType(1)
+        $scope.cart.paymentType = $scope.cart.getPaymentType()
 ]

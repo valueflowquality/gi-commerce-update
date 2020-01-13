@@ -17,9 +17,22 @@
           <label ng-click="cart.business = !cart.business">Buying for a company?  </label>
         </div>
       </div>
+      <div ng-show="cart.business" class="form-group">
+        <label class="control-label">Choose payment method<span class="req">*</span> :</label>
+        <div class="radio-menu">
+          <div class="radio-item">
+            <input type="radio" ng-model="cart.paymentType" ng-change="cart.setPaymentType(1)" ng-value="1"/>
+            <label ng-click="cart.setPaymentType(1); cart.paymentType=cart.getPaymentType()">Card  </label>
+          </div>
+          <div class="radio-item">
+            <input type="radio" ng-model="cart.paymentType" ng-change="cart.setPaymentType(2)" ng-value="2"/>
+            <label ng-click="cart.setPaymentType(2); cart.paymentType=cart.getPaymentType()">Invoice  </label>
+          </div>
+        </div>
+      </div>
     </div>
     <div class="col-md-12" ng-if="!model.me.loggedIn"  >
-      <div class="form-group" ng-class="{'has-error': isPropertyValidationError('firstName'), 'has-success': isPropertyValidationSuccess('firstName')}">
+        <div class="form-group" ng-class="{'has-error': isPropertyValidationError('firstName'), 'has-success': isPropertyValidationSuccess('firstName')}">
         <label class="control-label">First Name <span class="req">*</span> :</label>
         <input type="text"
                class="form-control"
@@ -84,16 +97,20 @@
       </div>
     </div>
     <div class="col-md-12">
-      <div class="form-group" >
-        <label>Company Name:</label>
+      <div class="form-group" ng-class="{'has-error': isPropertyValidationError('companyName'), 'has-success': isPropertyValidationSuccess('companyName')}">
+        <label>Company Name<span class="req" ng-if="cart.business">*</span>:</label>
         <input type="text"
                class="form-control"
                name="companyName"
                ng-model="cart.company.name"
+               ng-required="cart.business"
                ng-disabled="!cart.business" tabindex="1"/>
+        <p class="control-label" ng-show="isPropertyValidationError('companyName')">
+          The company name has not been entered
+        </p>
       </div>
       <div ng-if="cart.isTaxApplicable()" class="form-group" ng-class="{'has-error': isPropertyValidationError('vat'), 'has-success': isPropertyValidationSuccess('vat')}">
-        <label class="control-label">{{cart.taxName()}} Number (optional):</label>
+        <label class="control-label">{{cart.taxName() || 'VAT'}} Number (optional):</label>
         <input type="text"
                class="form-control"
                name="vat"
@@ -101,7 +118,7 @@
                ng-disabled="!cart.business"
                gi-vat tabindex="2"/>
          <p class="control-label" ng-show="isPropertyValidationError('vat')">
-            {{cart.taxName()}} Number is invalid (have you included the 2 digit country code?)
+            {{cart.taxName() || 'VAT'}} Number is invalid (have you included the 2 digit country code?)
          </p>
       </div>
     </div>
