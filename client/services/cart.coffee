@@ -429,9 +429,6 @@ angular.module('gi.commerce').provider 'giCart', () ->
               $rootScope.$broadcast('giCart:paymentFailed', err)
               return
 
-        console.log 'Charge Request'
-        console.dir chargeRequest
-
         $http.post('/api/submitInvoice', chargeRequest)
         .success () ->
           that.empty()
