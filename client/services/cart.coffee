@@ -324,7 +324,10 @@ angular.module('gi.commerce').provider 'giCart', () ->
           $rootScope.$on 'event:auth-login-complete', (e, me) ->
             console.log('event:auth-login-complete: ', e)
             that.setCustomer(me)
-            onPreparePayment()
+            if cart.paymentType == 2
+              onSubmitInvoice()
+            else
+              onPreparePayment()
           $rootScope.$broadcast('giCart:accountRequired', @customerInfo)
 
         if @billingAddress && @customer
