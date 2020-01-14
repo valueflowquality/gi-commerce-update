@@ -23,7 +23,7 @@
           <div class="col-xs-12 col-sm-6 col-sm-offset-3 well">
             <p>Thank you!</p>
             <p>We've received your request. Our accounts team will prepare your invoice and we'll send it to you via email.</p>
-            <p>If you don't receive it within 3-4 days, please get in touch at education@valueflowquality.com.</p>
+            <p>If you don't receive it within 3-4 days, please get in touch at education@valueflowquality.com</p>
           </div>
         </div>
       </div>
@@ -33,7 +33,7 @@
     <div class="col-xs-6">
       <div ng-if="cart.getStage() == 1" class="btn btn-primary btn-continue-shopping"
            ng-click="cart.continueShopping()" gi-enter="cart.continueShopping()">Continue Shopping</div>
-      <div ng-if="cart.getStage() > 1" class="btn btn-primary"
+      <div ng-if="cart.getStage() > 1 && cart.getStage() != 4" class="btn btn-primary"
            ng-click="cart.prevStage()" gi-enter="cart.prevStage()" ng-disabled="inPayment || cart.getStage() >= 4">Back</div>
     </div>
     <div class="col-xs-6">
