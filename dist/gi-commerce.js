@@ -1354,11 +1354,7 @@ angular.module('gi.commerce').provider('giCart', function() {
           }
         },
         setCustomer: function(customer) {
-          if (cart.paymentType === 2) {
-            this.customer = customer.user;
-          } else {
-            this.customer = customer;
-          }
+          this.customer = customer;
           if ((this.billingAddress != null) && (this.billingAddress._id == null)) {
             this.saveAddress(this.billingAddress);
           }

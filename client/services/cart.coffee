@@ -232,10 +232,7 @@ angular.module('gi.commerce').provider 'giCart', () ->
             $http.post('/api/addresses/', address)
 
       setCustomer: (customer) ->
-        if cart.paymentType == 2
-          @customer = customer.user;
-        else
-          @customer = customer
+        @customer = customer
 
         if @billingAddress? && !@billingAddress._id?
           @saveAddress @billingAddress
