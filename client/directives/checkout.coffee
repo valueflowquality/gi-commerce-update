@@ -45,4 +45,18 @@ angular.module('gi.commerce').directive 'giCheckout'
       , () ->
         $scope.inPayment = false
 
+    $scope.$on 'giCart:paymentFailed', (e, data) ->
+      if data?
+        if data.message?
+          $scope.errorMessage = data.message;
+        else
+          $scope.errorMessage = data;
+      else
+        $scope.errorMessage ='An error has occured during checkout, please check the provided information and get in touch with us.';
+
+    $scope.$on 'giCart:paymentCompleted', (e) ->
+      $scope.removeError();
+
+    $scope.removeError = () ->
+      $scope.errorMessage = "";
 ]
