@@ -52,5 +52,6 @@
     </div>
   </div>
   <div class="row medium-gap">
+    <div ng-if="errorMessage" ng-click="removeError()" class="error-box">{{ errorMessage }}</div>
   </div>
 </div>
