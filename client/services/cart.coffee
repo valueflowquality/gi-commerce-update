@@ -444,6 +444,7 @@ angular.module('gi.commerce').provider 'giCart', () ->
         stripeIns = Payment.stripe.getStripeInstance()
         deferred = $q.defer()
         subscriptionRequest =
+          marketCode: cart.market.code
           customer: that.customer
           paymentMethod: paymentMethod.id
           total: that.totalCost(),
@@ -465,7 +466,7 @@ angular.module('gi.commerce').provider 'giCart', () ->
             clientSecret = paymentIntent.client_secret
             status = paymentIntent.status
 
-            if (status == 'requires_source_action')
+            if (status == 'requires_action')
               stripeIns.confirmCardPayment(clientSecret).then( (result) ->
                 if result.error
                   deferred.reject result.error
