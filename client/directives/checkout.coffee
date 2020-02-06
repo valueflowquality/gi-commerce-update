@@ -45,6 +45,13 @@ angular.module('gi.commerce').directive 'giCheckout'
       , () ->
         $scope.inPayment = false
 
+    $scope.subscribeNow = () ->
+      $scope.inPayment = true
+      wrapSpinner(Cart.subscribeNow()).then () ->
+        $scope.inPayment = false
+      , () ->
+        $scope.inPayment = false
+
     $scope.$on 'giCart:paymentFailed', (e, data) ->
       if data?
         $scope.errorMessage = data;

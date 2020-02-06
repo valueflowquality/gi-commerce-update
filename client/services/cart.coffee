@@ -344,6 +344,37 @@ angular.module('gi.commerce').provider 'giCart', () ->
         else
           cart.stage += 1
 
+      submitUserInfo: () ->
+        that = @
+        onRegisterUser = () ->
+          cart.stage += 1
+
+        onSubmitInvoice = () ->
+          that.wrapSpinner()
+          that.submitInvoice(cart)
+
+        if @customerInfo and (not @customer)
+          $rootScope.$on 'event:auth-login-complete', (e, me) ->
+            that.setCustomer(me)
+            if cart.paymentType == 2
+              onSubmitInvoice()
+            else
+              onRegisterUser()
+          $rootScope.$broadcast('giCart:accountRequired', @customerInfo)
+
+        if @billingAddress && @customer
+          @saveAddress @billingAddress
+        if @shippingAddress && @customer
+          @saveAddress @shippingAddress
+        if cart.stage == 2
+          if @customerInfo and @customer
+            if cart.paymentType == 2
+              onSubmitInvoice()
+            else
+              onRegisterUser()
+        else
+          cart.stage += 1
+
       saveCardElement: (el) ->
         cart.cardElement = el
 
@@ -373,6 +404,79 @@ angular.module('gi.commerce').provider 'giCart', () ->
                 $rootScope.$broadcast('giCart:paymentFailed', result.error)
               deferred.reject()
           )
+        deferred.promise
+
+      subscribeNow: () ->
+        that = @
+        deferred = $q.defer()
+        if that.customer and cart.cardElement
+          stripeIns = Payment.stripe.getStripeInstance()
+          stripeIns.createPaymentMethod(
+            type: 'card',
+            card: cart.cardElement,
+            billing_details: {
+              email: that.customer.email
+            }
+          ).then( (result) ->
+            if result.paymentMethod
+              that.submitSubscriptionRequest(result.paymentMethod).then( () ->
+                $rootScope.$broadcast('giCart:paymentCompleted')
+                giEcommerceAnalytics.sendTransaction({ step: 4, option: 'Transaction Complete'}, cart.items)
+                that.nextStage()
+                that.empty()
+                deferred.resolve()
+              , (data) ->
+                $rootScope.$broadcast('giCart:paymentFailed', data)
+                deferred.reject()
+              )
+            else
+              if result.error
+                $rootScope.$broadcast('giCart:paymentFailed', result.error)
+              deferred.reject()
+          )
+        deferred.promise
+
+      submitSubscriptionRequest: (paymentMethod) ->
+        that = @
+        stripeIns = Payment.stripe.getStripeInstance()
+        deferred = $q.defer()
+        subscriptionRequest =
+          marketCode: cart.market.code
+          customer: that.customer
+          paymentMethod: paymentMethod.id
+          total: that.totalCost(),
+          billing: that.billingAddress
+          customer: that.customer
+          currency: that.getCurrencyCode().toLowerCase()
+          tax:
+            rate: cart.tax
+            name: cart.taxName
+          items: ({id: item._data._id, name: item._data.name, purchaseType: item._data.purchaseType}) for item in cart.items
+
+        $http.post('/api/createSubscription', subscriptionRequest)
+        .success (subscription) ->
+          latestInvoice = subscription.latest_invoice
+          paymentIntent = latestInvoice.payment_intent
+
+          if paymentIntent
+            clientSecret = paymentIntent.client_secret
+            status = paymentIntent.status
+
+            if (status == 'requires_action')
+              stripeIns.confirmCardPayment(clientSecret).then( (result) ->
+                if result.error
+                  deferred.reject result.error
+                else
+                  deferred.resolve()
+              )
+            else
+              deferred.resolve()
+          else
+            deferred.resolve()
+
+        .error (data) ->
+          deferred.reject data
+
         deferred.promise
 
       preparePayment: (cart, callback) ->
