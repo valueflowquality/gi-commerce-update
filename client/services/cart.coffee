@@ -355,7 +355,6 @@ angular.module('gi.commerce').provider 'giCart', () ->
 
         if @customerInfo and (not @customer)
           $rootScope.$on 'event:auth-login-complete', (e, me) ->
-            console.log('event:auth-login-complete: ', e)
             that.setCustomer(me)
             if cart.paymentType == 2
               onSubmitInvoice()
@@ -410,7 +409,6 @@ angular.module('gi.commerce').provider 'giCart', () ->
       subscribeNow: () ->
         that = @
         deferred = $q.defer()
-        console.log that.customer
         if that.customer and cart.cardElement
           stripeIns = Payment.stripe.getStripeInstance()
           stripeIns.createPaymentMethod(
@@ -420,7 +418,6 @@ angular.module('gi.commerce').provider 'giCart', () ->
               email: that.customer.email
             }
           ).then( (result) ->
-            console.log result.paymentMethod
             if result.paymentMethod
               that.submitSubscriptionRequest(result.paymentMethod).then( () ->
                 $rootScope.$broadcast('giCart:paymentCompleted')
@@ -458,7 +455,6 @@ angular.module('gi.commerce').provider 'giCart', () ->
 
         $http.post('/api/createSubscription', subscriptionRequest)
         .success (subscription) ->
-          console.dir(subscription)
           latestInvoice = subscription.latest_invoice
           paymentIntent = latestInvoice.payment_intent
 
@@ -471,14 +467,11 @@ angular.module('gi.commerce').provider 'giCart', () ->
                 if result.error
                   deferred.reject result.error
                 else
-                  console.log("first resolve")
                   deferred.resolve()
               )
             else
-              console.log("second resolve")
               deferred.resolve()
           else
-            console.log("third resolve")
             deferred.resolve()
 
         .error (data) ->
