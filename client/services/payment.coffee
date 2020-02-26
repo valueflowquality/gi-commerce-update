@@ -48,6 +48,7 @@ angular.module('gi.commerce').factory 'giPayment'
       card = elements.create('card')
       Cart.saveCardElement(card)
       card.mount(id)
+      card
 
     createIntent: (chargeRequest) ->
       deferred = $q.defer()
