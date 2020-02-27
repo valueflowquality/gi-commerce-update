@@ -62,6 +62,8 @@ angular.module('gi.commerce').provider 'giCart', () ->
         taxInclusive: true
         taxApplicable: false
         discountPercent: 0
+        checkoutFormValid: false
+        cardElementValid: false
       return
 
     save = () ->
@@ -202,11 +204,20 @@ angular.module('gi.commerce').provider 'giCart', () ->
       setValidity: (valid) ->
         cart.isValid = valid
 
+      setCheckoutFormValidity: (valid) ->
+        cart.checkoutFormValid = valid
+
+      setCardElementValidity: (valid) ->
+        cart.cardElementValid = valid
+
       isStageInvalid: (stage) ->
         if cart.validStages[stage]?
           not (cart.isValid and cart.validStages[stage])
         else
           not cart.isValid
+
+      isCheckoutFormInvalid: () ->
+        not cart.checkoutFormValid || not cart.cardElementValid
 
       getCurrencySymbol: () ->
         cart.currency.symbol
@@ -344,36 +355,46 @@ angular.module('gi.commerce').provider 'giCart', () ->
         else
           cart.stage += 1
 
+      handleSubscriptionRequest: () ->
+        that = @
+        deferred = $q.defer()
+
+        that.submitUserInfo().then(
+          () ->
+            that.subscribeNow().then(
+              () ->
+                deferred.resolve()
+              , (subscriptionErr) ->
+                deferred.reject(subscriptionErr)
+            )
+          , (registrationErr) ->
+            deferred.reject(registrationErr)
+        )
+
+        deferred.promise
+
       submitUserInfo: () ->
         that = @
-        onRegisterUser = () ->
-          cart.stage += 1
-
-        onSubmitInvoice = () ->
-          that.wrapSpinner()
-          that.submitInvoice(cart)
+        deferred = $q.defer()
+        userRegistrationRequired = false
 
         if @customerInfo and (not @customer)
+          userRegistrationRequired = true
           $rootScope.$on 'event:auth-login-complete', (e, me) ->
             that.setCustomer(me)
-            if cart.paymentType == 2
-              onSubmitInvoice()
-            else
-              onRegisterUser()
+            deferred.resolve()
           $rootScope.$broadcast('giCart:accountRequired', @customerInfo)
 
         if @billingAddress && @customer
           @saveAddress @billingAddress
+
         if @shippingAddress && @customer
           @saveAddress @shippingAddress
-        if cart.stage == 2
-          if @customerInfo and @customer
-            if cart.paymentType == 2
-              onSubmitInvoice()
-            else
-              onRegisterUser()
-        else
-          cart.stage += 1
+
+        if !userRegistrationRequired
+          deferred.resolve()
+
+        deferred.promise
 
       saveCardElement: (el) ->
         cart.cardElement = el
