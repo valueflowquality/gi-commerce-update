@@ -1,4 +1,11 @@
-<div class="container gi-cart checkout-container">
+<div class="container preloader-wrapper" ng-if="pageReady == false">
+  <div class="preloader">
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+  </div>
+</div>
+<div ng-show="pageReady" class="container gi-cart checkout-container">
   <div class="row" ng-show="cart.totalItems() === 0">
     <div class="col-xs-12 col-sm-6 col-sm-offset-3 well">
       <p>Your cart is empty</p>
@@ -56,7 +63,8 @@
       </div>
     </div>
   </div> -->
-  <div class="small-gap" ng-show="cart.totalItems() > 0">
+  <div ng-cloak class="small-gap" ng-show="cart.totalItems() > 0">
+    <span us-spinner="{radius:30, width:8, length: 16}" spinner-key="gi-cart-spinner-1"></span>
     <div ng-form name="checkoutForm" class="checkout-form">
       <div class="checkout-left-menu-container">
         <div class="checkout-colored-menu relative-container">
@@ -68,7 +76,7 @@
               ACCOUNT
             </div>
             <div class="checkout-input-container" >
-              <div class="checkout-input-row">
+              <div class="checkout-input-row" ng-if="!model.me.loggedIn">
                 <div class="checkout-half-row checkout-input-wrapper">
                   <div class="form-group" ng-class="{'has-error': isPropertyValidationError('firstName'), 'has-success': isPropertyValidationSuccess('firstName')}">
                     <input class="form-control"
@@ -93,7 +101,7 @@
                   </div>
                 </div>
               </div>
-              <div class="checkout-input-row checkout-input-wrapper">
+              <div class="checkout-input-row checkout-input-wrapper" ng-if="!model.me.loggedIn">
                 <div class="form-group" ng-class="{'has-error': isPropertyValidationError('email'), 'has-success': isPropertyValidationSuccess('email')}">
                   <input class="form-control"
                   type="email"
@@ -106,7 +114,7 @@
                   required/>
                 </div>
               </div>
-              <div class="checkout-input-row">
+              <div class="checkout-input-row" ng-if="!model.me.loggedIn">
                 <div class="checkout-half-row checkout-input-wrapper form-group"
                 ng-class="{'has-error': isPropertyValidationError('password'), 'has-success': isPropertyValidationSuccess('password')}">
                   <input class="form-control"
@@ -274,7 +282,7 @@
               tabindex="9"
               ng-click="subscribeNow()"
               gi-enter="subscribeNow()"
-              ng-disabled="cart.isCheckoutFormInvalid()">
+              ng-disabled="cart.isCheckoutFormInvalid() || isSpinnerShown">
                 Confirm purchase
               </div>
             </div>
