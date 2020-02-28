@@ -6,8 +6,8 @@ angular.module('gi.commerce').provider 'giCart', () ->
 
   @$get = ['$q', '$rootScope', '$http', 'giCartItem', 'giLocalStorage'
   , 'giCountry', 'giCurrency', 'giPayment', 'giMarket', 'giUtil', '$window', 'giEcommerceAnalytics', 'giDiscountCode'
-  , '$injector', ($q, $rootScope, $http, giCartItem, store, Country, Currency, Payment
-  , Market, Util, $window, giEcommerceAnalytics, Discount, $injector) ->
+  , '$injector', '$timeout', ($q, $rootScope, $http, giCartItem, store, Country, Currency, Payment
+  , Market, Util, $window, giEcommerceAnalytics, Discount, $injector, $timeout) ->
     cart = {}
 
     getPricingInfo = () ->
@@ -443,9 +443,16 @@ angular.module('gi.commerce').provider 'giCart', () ->
               that.submitSubscriptionRequest(result.paymentMethod).then( () ->
                 $rootScope.$broadcast('giCart:paymentCompleted')
                 giEcommerceAnalytics.sendTransaction({ step: 4, option: 'Transaction Complete'}, cart.items)
-                that.nextStage()
-                that.empty()
-                deferred.resolve()
+                that.waitForAsset().then(
+                  () ->
+                    that.empty()
+                    that.redirectUser()
+                    deferred.resolve()
+                  , (err) ->
+                    that.empty()
+                    $rootScope.$broadcast('giCart:paymentFailed', "An error occurred with the automatic redirect, please open the welcome page manually.")
+                    deferred.reject()
+                )
               , (data) ->
                 $rootScope.$broadcast('giCart:paymentFailed', data)
                 deferred.reject()
@@ -499,6 +506,34 @@ angular.module('gi.commerce').provider 'giCart', () ->
           deferred.reject data
 
         deferred.promise
+
+      waitForAsset: () ->
+        that = @
+        deferred = $q.defer()
+        hasSubscription = false
+        that.requestUserSubscriptionInfo().then(
+          (response) ->
+            if response.data
+              deferred.resolve()
+            else
+              $timeout ( ()->
+                that.waitForAsset().then( () ->
+                  deferred.resolve()
+                , (err)->
+                  deferred.reject(err)
+                )
+              ), 1000
+          , (err) ->
+            deferred.reject(err)
+        )
+
+        deferred.promise
+
+      requestUserSubscriptionInfo: () ->
+        return $http.get('/api/assets/has-subscription')
+
+      redirectUser: () ->
+        $window.location.href = "/a/content"
 
       preparePayment: (cart, callback) ->
         that = @
