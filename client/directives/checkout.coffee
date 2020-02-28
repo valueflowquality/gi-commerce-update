@@ -26,7 +26,6 @@ angular.module('gi.commerce').directive 'giCheckout'
 
     cardElement = Payment.stripe.mountElement('#checkout-card-container', Cart)
     cardElement.on 'change', (event) ->
-      console.dir(event)
       if event.complete
         $scope.cart.setCardElementValidity(true)
       else
