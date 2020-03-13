@@ -533,7 +533,7 @@ angular.module('gi.commerce').provider 'giCart', () ->
         return $http.get('/api/assets/has-subscription')
 
       redirectUser: () ->
-        $window.location.href = "/a/content"
+        $window.location.href = "/welcome"
 
       preparePayment: (cart, callback) ->
         that = @
