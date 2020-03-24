@@ -19,10 +19,11 @@ angular.module('gi.commerce').directive 'giCheckout'
       $scope.checkoutForm[prop].$dirty and
       $scope.checkoutForm[prop].$touched
 
-    $scope.pageReady = true;
+    $scope.pageReady = true
     $scope.cart = Cart
-    $scope.currentDate = new Date();
-    $scope.isSpinnerShown = false;
+    $scope.nextPaymentDate = new Date()
+    $scope.nextPaymentDate.setFullYear($scope.nextPaymentDate.getFullYear() + 1)
+    $scope.isSpinnerShown = false
 
     cardElement = Payment.stripe.mountElement('#checkout-card-container', Cart)
     cardElement.on 'change', (event) ->
