@@ -1,6 +1,6 @@
 angular.module('gi.commerce').directive 'giCheckout'
-, ['giCart', 'usSpinnerService', 'Address', 'giPayment', '$modal', 'giUtil'
-, (Cart, Spinner, Address, Payment, $modal, Util) ->
+, ['giCart', 'usSpinnerService', 'Address', 'giPayment', '$modal', 'giUtil',  '$q'
+, (Cart, Spinner, Address, Payment, $modal, Util, $q) ->
   restrict : 'E',
   scope:
     model: '='
@@ -19,11 +19,25 @@ angular.module('gi.commerce').directive 'giCheckout'
       $scope.checkoutForm[prop].$dirty and
       $scope.checkoutForm[prop].$touched
 
+    invokeCartPayment = () ->
+      deferred = $q.defer()
+      $scope.inPayment = true
+      Cart.handleSubscriptionRequest().then () ->
+        # retained as true to keep hiding the form cotents until the redirect
+        $scope.inPayment = true
+        deferred.resolve()
+      , () ->
+        $scope.inPayment = false
+        deferred.reject()
+      
+      deferred.promise
+
     $scope.pageReady = true
     $scope.cart = Cart
     $scope.nextPaymentDate = new Date()
     $scope.nextPaymentDate.setFullYear($scope.nextPaymentDate.getFullYear() + 1)
     $scope.isSpinnerShown = false
+    $scope.inPayment = false
 
     cardElement = Payment.stripe.mountElement('#checkout-card-container', Cart)
     cardElement.on 'change', (event) ->
@@ -45,12 +59,8 @@ angular.module('gi.commerce').directive 'giCheckout'
         wrapSpinner Cart.setCountry(newVal.code)
 
     $scope.subscribeNow = () ->
-      $scope.inPayment = true
-      wrapSpinner(Cart.handleSubscriptionRequest()).then () ->
-        $scope.inPayment = false
-      , () ->
-        $scope.inPayment = false
-
+      wrapSpinner(invokeCartPayment())
+    
     $scope.$on 'giCart:paymentFailed', (e, data) ->
       if data?
         $scope.errorMessage = data;

@@ -6,14 +6,14 @@
   </div>
 </div>
 <div ng-show="pageReady" class="container gi-cart checkout-container">
-  <div class="row" ng-show="cart.totalItems() === 0">
+  <div class="row" ng-show="cart.totalItems() === 0 && !inPayment">
     <div class="col-xs-12 col-sm-6 col-sm-offset-3 well">
       <p>Your cart is empty</p>
     </div>
   </div>
   <div ng-cloak class="small-gap" ng-show="cart.totalItems() > 0">
     <span us-spinner="{radius:30, width:8, length: 16}" spinner-key="gi-cart-spinner-1"></span>
-    <div ng-form name="checkoutForm" class="checkout-form">
+    <div ng-form name="checkoutForm" class="checkout-form" ng-show="!inPayment">
       <div class="checkout-left-menu-container">
         <div class="checkout-summary-container mobile-summary">
           <div class="summary-title">Summary</div>
