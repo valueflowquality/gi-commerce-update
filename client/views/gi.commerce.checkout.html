@@ -14,66 +14,64 @@
   <div ng-cloak class="small-gap" ng-show="cart.totalItems() > 0">
     <span us-spinner="{radius:30, width:8, length: 16}" spinner-key="gi-cart-spinner-1"></span>
     <div ng-form name="checkoutForm" class="checkout-form" ng-show="!inPayment">
-      <div class="checkout-left-menu-container">
-        <div class="checkout-summary-container mobile-summary">
-          <div class="summary-title">Summary</div>
-          <table class="table checkout-table">
-            <thead>
-              <tr>
-                <th><span class="checkout-text">Order</span></th>
-                <th></th>
-              </tr>
-            </thead>
-            <tfoot>
-              <tr class="checkout-total-row">
-                <th>Total</th>
-                <th><div class="pull-right">{{ cart.totalCost() | giCurrency:cart.getCurrencySymbol }}</div></th>
-              </tr>
-            </tfoot>
-            <tbody>
-              <tr ng-repeat="item in cart.getItems() track by $index">
-                <td>{{ item.getName() }}</td>
-                <td><div class="pull-right">{{ item.getTotal(cart.getPricingInfo()) | giCurrency:cart.getCurrencySymbol}}</div></td>
-              </tr>
-            </tbody>
-          </table>
+      <div class="checkout-input-row">
+        <div class="two-third-block centered-block">
+          <div class="checkout-summary-container">
+            <table class="table checkout-table">
+              <tfoot>
+                <tr class="checkout-total-row">
+                  <th>Total</th>
+                  <th><div class="pull-right">{{ cart.totalCost() | giCurrency:cart.getCurrencySymbol() }}</div></th>
+                </tr>
+              </tfoot>
+              <tbody>
+                <tr ng-repeat="item in cart.getItems() track by $index">
+                  <td><div class="item-title">{{ item.getName() }}</div><div class="item-description">{{ item.getData().basketDescription }}</div></td>
+                  <td><div class="pull-right item-price">{{ item.getTotal(cart.getPricingInfo()) | giCurrency:cart.getCurrencySymbol() }}<span ng-click="cart.removeItem($index)" class="glyphicon glyphicon-remove checkout-remove-icon"></span></div></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
-        <div class="checkout-billing-container-wrapper">
-          <div class="checkout-colored-menu relative-container">
-            <div class="checkout-form-section">
-              <div class="checkout-form-section-title">
-                ACCOUNT
-              </div>
-              <div class="login-reminder-container" ng-show="!model.me.loggedIn">
-                <span class="checkout-text">Already have an account? <a class="checkout-href" ng-click="showLoginModal()">Sign in</a></span>
-              </div>
-              <div class="checkout-input-container" >
-                <div class="checkout-input-row" ng-if="!model.me.loggedIn">
-                  <div class="checkout-half-row checkout-input-wrapper">
-                    <div class="form-group" ng-class="{'has-error': isPropertyValidationError('firstName'), 'has-success': isPropertyValidationSuccess('firstName')}">
-                      <input class="form-control"
-                      type="text"
-                      tabindex="1"
-                      name="firstName"
-                      ng-model="cart.customerInfo.firstName"
-                      placeholder="First Name"
-                      required/>
-                    </div>
-                  </div><!--comment to avoid having a newline
-                  --><div class="checkout-half-row checkout-input-wrapper">
-                    <div class="form-group" ng-class="{'has-error': isPropertyValidationError('lastName'), 'has-success': isPropertyValidationSuccess('lastName')}">
-                      <input class="form-control"
-                      type="text"
-                      tabindex="1"
-                      name="lastName"
-                      ng-model="cart.customerInfo.lastName"
-                      ng-pattern="lastNameRegex"
-                      placeholder="Last Name"
-                      required/>
-                    </div>
+      </div>
+      <div class="checkout-colored-menu relative-container">
+        <div class="checkout-form-section">
+          <div class="section-number-container inline-container">
+            <div class="section-number">1</div>
+          </div><!--
+          --><div class="main-account-section">
+            <div class="checkout-form-section-title input-adjustment account-title">
+              Account Details
+            </div>
+            <div class="login-reminder-container" ng-show="!model.me.loggedIn">
+              <span class="sign-in-text">Already have an account? <a class="checkout-href" ng-click="showLoginModal()">Sign in</a></span>
+            </div>
+            <div class="checkout-input-container">
+              <div class="checkout-input-row">
+                <div class="checkout-quarter-row checkout-input-wrapper">
+                  <div class="form-group" ng-class="{'has-error': isPropertyValidationError('firstName'), 'has-success': isPropertyValidationSuccess('firstName')}">
+                    <input class="form-control"
+                    type="text"
+                    tabindex="1"
+                    name="firstName"
+                    ng-model="cart.customerInfo.firstName"
+                    placeholder="First Name"
+                    required/>
                   </div>
-                </div>
-                <div class="checkout-input-row checkout-input-wrapper" ng-if="!model.me.loggedIn">
+                </div><!--comment to avoid having a newline
+                --><div class="checkout-quarter-row checkout-input-wrapper">
+                  <div class="form-group" ng-class="{'has-error': isPropertyValidationError('lastName'), 'has-success': isPropertyValidationSuccess('lastName')}">
+                    <input class="form-control"
+                    type="text"
+                    tabindex="1"
+                    name="lastName"
+                    ng-model="cart.customerInfo.lastName"
+                    ng-pattern="lastNameRegex"
+                    placeholder="Last Name"
+                    required/>
+                  </div>
+                </div><!--
+                --><div class="checkout-half-row checkout-input-wrapper">
                   <div class="form-group" ng-class="{'has-error': isPropertyValidationError('email'), 'has-success': isPropertyValidationSuccess('email')}">
                     <input class="form-control"
                     type="email"
@@ -86,62 +84,91 @@
                     required/>
                   </div>
                 </div>
-                <div class="checkout-input-row" ng-if="!model.me.loggedIn">
-                  <div class="checkout-half-row checkout-input-wrapper form-group"
-                  ng-class="{'has-error': isPropertyValidationError('password'), 'has-success': isPropertyValidationSuccess('password')}">
-                    <input class="form-control"
-                    type="password"
-                    tabindex="1"
-                    name="password"
-                    placeholder="Password"
-                    ng-model="cart.customerInfo.password"
-                    gi-password
-                    ng-required="!model.me.loggedIn"/>
-                  </div><!--comment to avoid having a newline
-                  --><div class="checkout-half-row checkout-input-wrapper form-group"
-                  ng-class="{'has-error': isPropertyValidationError('confirm'), 'has-success': isConfirmPasswordSuccess('confirm')}">
-                    <input class="form-control"
-                    type="password"
-                    tabindex="1"
-                    name="confirm"
-                    ng-model="cart.customerInfo.confirm"
-                    placeholder="Confirm Password"
-                    gi-match="item.password"
-                    ng-required="!model.me.loggedIn"
-                    tabindex="1"/>
-                  </div>
-                </div>
-                <div class="checkout-input-row form-group"
-                ng-class="{'has-error': isPropertyValidationError('companyName'), 'has-success': isPropertyValidationSuccess('companyName')}">
-                  <div class="checkout-half-row checkout-input-wrapper">
-                    <input class="form-control"
-                    type="text"
-                    tabindex="1"
-                    name="companyName"
-                    ng-model="cart.company.name"
-                    placeholder="Company (optional)"/>
-                  </div>
-                </div>
-                <!-- <div class="checkout-input-row checkout-input-wrapper">
-                  <div class="checkbox checkbox-circle">
-                    <input type="checkbox" ng-model="insights">
-                    <label class="checkout-checkbox" ng-click="insights = !insights">Do you want to receive updates and insights from VFQ?</label>
-                  </div>
-                </div> -->
               </div>
+              <div class="checkout-input-row">
+                <div class="checkout-half-row checkout-input-wrapper form-group"
+                ng-class="{'has-error': isPropertyValidationError('password'), 'has-success': isPropertyValidationSuccess('password')}">
+                  <input class="form-control"
+                  type="password"
+                  tabindex="1"
+                  name="password"
+                  placeholder="Password"
+                  ng-model="cart.customerInfo.password"
+                  gi-password
+                  ng-required="!model.me.loggedIn"/>
+                </div><!--comment to avoid having a newline
+                --><div class="checkout-half-row checkout-input-wrapper form-group"
+                ng-class="{'has-error': isPropertyValidationError('confirm'), 'has-success': isConfirmPasswordSuccess('confirm')}">
+                  <input class="form-control"
+                  type="password"
+                  tabindex="1"
+                  name="confirm"
+                  ng-model="cart.customerInfo.confirm"
+                  placeholder="Confirm Password"
+                  gi-match="item.password"
+                  ng-required="!model.me.loggedIn"
+                  tabindex="1"/>
+                </div>
+              </div>
+              <!-- <div class="checkout-input-row checkout-input-wrapper">
+                <div class="checkbox checkbox-circle">
+                  <input type="checkbox" ng-model="insights">
+                  <label class="checkout-checkbox" ng-click="insights = !insights">Do you want to receive updates and insights from VFQ?</label>
+                </div>
+              </div> -->
             </div>
+          </div>
+        </div>
+      </div>
+      <div class="checkout-input-row">
+        <div class="checkout-half-row left-section">
+          <div class="payment-details-height checkout-colored-menu relative-container">
             <div class="checkout-form-section">
-              <div class="checkout-form-section-title">
-                PAYMENT METHOD
+              <div class="section-number-container block-container">
+                <div class="section-number">2</div>
               </div>
-              <span class="checkout-text"> Need to pay with an invoice? You can request one 
-                <a 
-                class="checkout-href" 
+              <div class="checkout-form-section-title input-adjustment">
+                Payment Details
+              </div>
+              <div class="form-group company-checkbox">
+                <div class="checkbox checkbox-success checkbox-circle">
+                  <input type="checkbox" ng-model="cart.business" tabindex="1" autofocus="" class="ng-pristine ng-valid ng-touched">
+                  <label ng-click="cart.business = !cart.business" class="">Buying for a company?</label>
+                </div>
+              </div>
+              <div class="invoice-request">Need an invoice? Request one
+                <a
+                class="checkout-href"
                 href="mailto: education@valueflowquality.com?subject=Invoice request for VFQ Membership&body=Please send us the information below%0D%0A%0D%0A%0D%0ACompany Name:%0D%0A%0D%0ACompany address:%0D%0A%0D%0ACompany VAT Number:%0D%0A%0D%0ANumber of memberships to be purchased:%0D%0A%0D%0AName and email address of new members:%0D%0A%0D%0A">
                   here
                 </a>
-              </span>
-              <div class="checkout-input-container" >
+              </div>
+              <div class="checkout-input-container">
+                <div class="checkout-input-row" ng-show="cart.business">
+                  <div class="checkout-half-row checkout-input-wrapper"
+                    ng-class="{'has-error': isPropertyValidationError('companyName'), 'has-success': isPropertyValidationSuccess('companyName')}">
+                    <div class="form-group">
+                      <input class="form-control"
+                      type="text"
+                      tabindex="1"
+                      name="companyName"
+                      ng-model="cart.company.name"
+                      ng-required="cart.business"
+                      placeholder="Company"/>
+                    </div>
+                  </div><!--
+                  --><div class="checkout-half-row checkout-input-wrapper"
+                    ng-class="{'has-error': isPropertyValidationError('vat'), 'has-success': isPropertyValidationSuccess('vat')}">
+                    <div class="form-group">
+                      <input class="form-control"
+                      type="text"
+                      tabindex="1"
+                      name="vat"
+                      ng-model="cart.company.VAT"
+                      placeholder="PVN Number (optional)"/>
+                    </div>
+                  </div>
+                </div>
                 <div class="checkout-input-row checkout-input-wrapper">
                   <div class="checkout-card-wrapper">
                     <div id="checkout-card-container"></div>
@@ -149,34 +176,43 @@
                 </div>
               </div>
             </div>
+          </div>
+        </div><!--
+        --><div class="checkout-half-row right-section">
+          <div class="payment-details-height checkout-colored-menu relative-container">
             <div class="checkout-form-section">
-              <div class="checkout-form-section-title">
-                BILLING ADDRESS
+              <div class="section-number-container block-container">
+                <div class="section-number">3</div>
+              </div>
+              <div class="checkout-form-section-title input-adjustment">
+                Billing Address
               </div>
               <div class="checkout-input-container">
-                <div class="checkout-input-row checkout-input-wrapper">
-                  <div class="form-group"
-                  ng-class="{'has-error': isPropertyValidationError('billing-line1'),'has-success': isPropertyValidationSuccess('billing-line1')}">
-                    <input class="form-control"
-                    type="text"
-                    tabindex="1"
-                    placeholder="Address line 1"
-                    name="billing-line1"
-                    ng-model="cart.billingAddress.line1"
-                    required/>
-                  </div>
-                </div>
-                <div class="checkout-input-row checkout-input-wrapper">
-                  <div class="form-group">
-                    <input class="form-control"
-                    type="text"
-                    tabindex="1"
-                    placeholder="Address line 2"
-                    ng-model="cart.billingAddress.line2"/>
+                <div class="checkout-input-row">
+                  <div class="checkout-half-row checkout-input-wrapper">
+                    <div class="form-group"
+                    ng-class="{'has-error': isPropertyValidationError('billing-line1'),'has-success': isPropertyValidationSuccess('billing-line1')}">
+                      <input class="form-control"
+                      type="text"
+                      tabindex="1"
+                      placeholder="Address line 1"
+                      name="billing-line1"
+                      ng-model="cart.billingAddress.line1"
+                      required/>
+                    </div>
+                  </div><!--
+                  --><div class="checkout-half-row checkout-input-wrapper">
+                    <div class="form-group">
+                      <input class="form-control"
+                      type="text"
+                      tabindex="1"
+                      placeholder="Address line 2 (optional)"
+                      ng-model="cart.billingAddress.line2"/>
+                    </div>
                   </div>
                 </div>
                 <div class="checkout-input-row">
-                  <div class="checkout-two-third-row checkout-input-wrapper form-group"
+                  <div class="checkout-half-row checkout-input-wrapper form-group"
                   ng-class="{'has-error': isPropertyValidationError('billing-city'), 'has-success': isPropertyValidationSuccess('billing-city')}">
                     <input class="form-control"
                     type="text"
@@ -185,8 +221,29 @@
                     placeholder="City"
                     ng-model="cart.billingAddress.city"
                     required/>
-                  </div><!--comment to avoid having a newline
-                  --><div class="checkout-third-row checkout-input-wrapper form-group"
+                  </div><!--
+                  --><div class="checkout-half-row checkout-input-wrapper">
+                    <div class="form-group">
+                      <input class="form-control"
+                      type="text"
+                      tabindex="1"
+                      placeholder="State/Region (optional)"
+                      ng-model="cart.billingAddress.state"/>
+                    </div>
+                  </div>
+                </div>
+                <div class="checkout-input-row">
+                  <div class="checkout-three-quarter-row checkout-input-wrapper">
+                    <div class="form-group" ng-class="{'has-success': validCountry}">
+                      <ui-select class="checkout-select" tabindex="1" required on-select="checkValid($select.selected.name)" ng-model="cart.billingAddress.country">
+                        <ui-select-match placeholder="Country">{{$select.selected.name}}</ui-select-match>
+                        <ui-select-choices repeat="t.code as t in model.countries | orderBy:getCountrySorter() | filter: $select.search">
+                          <div ng-bind-html="t.name | highlight: $select.search"></div>
+                        </ui-select-choices>
+                      </ui-select>
+                    </div>
+                  </div><!--
+                  --><div class="checkout-quarter-row checkout-input-wrapper form-group"
                   ng-class="{'has-error': isPropertyValidationError('billing-code'), 'has-success': isPropertyValidationSuccess('billing-code')}">
                     <input class="form-control"
                     type="text"
@@ -197,68 +254,31 @@
                     required/>
                   </div>
                 </div>
-                <div class="checkout-input-row checkout-input-wrapper">
-                  <div class="form-group" ng-class="{'has-success': validCountry}">
-                    <ui-select class="checkout-select" tabindex="1" required on-select="checkValid($select.selected.name)" ng-model="cart.billingAddress.country">
-                      <ui-select-match placeholder="Country">{{$select.selected.name}}</ui-select-match>
-                      <ui-select-choices repeat="t.code as t in model.countries | orderBy:getCountrySorter() | filter: $select.search">
-                        <div ng-bind-html="t.name | highlight: $select.search"></div>
-                      </ui-select-choices>
-                    </ui-select>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
         </div>
-      </div><!--
-      --><div class="checkout-right-menu-container">
-        <div class="checkout-summary-container full-summary">
-          <div class="summary-title">Summary</div>
-          <table class="table checkout-table">
-            <thead>
-              <tr>
-                <th><span class="checkout-text">Order</span></th>
-                <th></th>
-              </tr>
-            </thead>
-            <tfoot>
-              <tr class="checkout-total-row">
-                <th>Total</th>
-                <th><div class="pull-right">{{ cart.totalCost() | giCurrency:cart.getCurrencySymbol }}</div></th>
-              </tr>
-            </tfoot>
-            <tbody>
-              <tr ng-repeat="item in cart.getItems() track by $index">
-                <td>{{ item.getName() }}</td>
-                <td><div class="pull-right">{{ item.getTotal(cart.getPricingInfo()) | giCurrency:cart.getCurrencySymbol}}</div></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="checkout-confirmation-container-wrapper">
-          <div class="checkout-colored-menu">
-            <div class="checkout-form-section checkout-submit-section">
-              <div class="checkout-form-section-title">
-                REVIEW & CONFIRM
-              </div>
-              <div class="checkout-submit-text-container">
-                <div class="checkout-submit-text">
-                    <p class="checkout-submit-paragraph">
-                      You will be charged upon confirmation of your purchase. Your VFQ  Membership will be valid until {{nextPaymentDate.getDate()}} {{nextPaymentDate.toLocaleString('default', { month: 'long' })}} {{nextPaymentDate.getFullYear()}}.
-                    </p>
-                    <p class="checkout-submit-paragraph">
-                      By continuing with this purchase you agree to our <a class="checkout-href" href="/terms-and-conditions">Terms and Conditions</a>.
-                    </p>
-                </div>
-              </div>
-              <div class="btn btn-primary checkout-submit"
+      </div>
+      <div class="checkout-border-menu relative-container">
+        <div class="checkout-form-section confirmation-section">
+          <div class="confirmation-text-container">
+            <div class="checkout-form-section-title input-adjustment">
+              Review & confirm
+            </div>
+            <p>
+              You will be charged once upon confirmation of your purchase. Your VFQ Membership will be valid until {{nextPaymentDate.getDate()}} {{nextPaymentDate.toLocaleString('default', { month: 'long' })}} {{nextPaymentDate.getFullYear()}}.
+            </p>
+            <p>
+              By continuing with this purchase you agree to our <a class="checkout-href" href="/terms-and-conditions">Terms and Conditions</a>.
+            </p>
+          </div><!--
+          --><div class="confirmation-button-container">
+            <div class="btn checkout-submit"
               tabindex="9"
               ng-click="subscribeNow()"
               gi-enter="subscribeNow()"
               ng-disabled="cart.isCheckoutFormInvalid() || isSpinnerShown">
-                Confirm purchase
-              </div>
+                CONFIRM PURCHASE
             </div>
           </div>
         </div>
