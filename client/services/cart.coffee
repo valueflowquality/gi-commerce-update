@@ -63,7 +63,7 @@ angular.module('gi.commerce').provider 'giCart', () ->
         taxApplicable: false
         discountPercent: 0
         checkoutFormValid: false
-        cardElementValid: false
+        cardElementValid: undefined
       return
 
     save = () ->
@@ -218,6 +218,9 @@ angular.module('gi.commerce').provider 'giCart', () ->
 
       isCheckoutFormInvalid: () ->
         not cart.checkoutFormValid || not cart.cardElementValid
+
+      isCardElementFormValid: () ->
+        cart.cardElementValid
 
       getCurrencySymbol: () ->
         cart.currency.symbol
