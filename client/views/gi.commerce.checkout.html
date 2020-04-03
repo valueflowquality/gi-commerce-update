@@ -342,7 +342,10 @@
             <div class="checkout-form-section-title input-adjustment">
               Review & confirm
             </div>
-            <p>
+            <p ng-if="!model.me.user.trialUsed">
+              A 30 day free trial will be applied to your first subscription. Your VFQ Membership will be valid until {{nextPaymentDate.getDate()}} {{nextPaymentDate.toLocaleString('default', { month: 'long' })}} {{nextPaymentDate.getFullYear()}}.
+            </p>
+            <p ng-if="model.me.user.trialUsed">
               You will be charged once upon confirmation of your purchase. Your VFQ Membership will be valid until {{nextPaymentDate.getDate()}} {{nextPaymentDate.toLocaleString('default', { month: 'long' })}} {{nextPaymentDate.getFullYear()}}.
             </p>
             <p>

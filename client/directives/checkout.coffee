@@ -29,15 +29,21 @@ angular.module('gi.commerce').directive 'giCheckout'
       , () ->
         $scope.inPayment = false
         deferred.reject()
-      
+
       deferred.promise
 
     $scope.pageReady = true
     $scope.cart = Cart
-    $scope.nextPaymentDate = new Date()
-    $scope.nextPaymentDate.setFullYear($scope.nextPaymentDate.getFullYear() + 1)
     $scope.isSpinnerShown = false
     $scope.inPayment = false
+
+    setPaymentDate = () ->
+      $scope.nextPaymentDate = new Date()
+      if $scope.model?.me?.user?.trialUsed
+        $scope.nextPaymentDate.setFullYear($scope.nextPaymentDate.getFullYear() + 1)
+      else
+        $scope.nextPaymentDate.setDate($scope.nextPaymentDate.getDate() + 30)
+
 
     cardElement = Payment.stripe.mountElement('#checkout-card-container', Cart)
     cardElement.on 'change', (event) ->
@@ -50,9 +56,10 @@ angular.module('gi.commerce').directive 'giCheckout'
 
     $scope.$watch 'model.me', (me) ->
       if me?.user?
+        setPaymentDate()
         Cart.setCustomer(me.user)
         Address.query({ userId: me.user._id }).then (addresses) ->
-          $scope.cart.addresses = addresses
+          $scope.cart.addresses = addresses        
 
     $scope.$watch 'model.userCountry', (newVal) ->
       if newVal?
@@ -146,4 +153,6 @@ angular.module('gi.commerce').directive 'giCheckout'
     $scope.$watch 'checkoutForm.$pending', (pending) ->
       if pending?
         $scope.cart.setCheckoutFormValidity(false)
+
+    setPaymentDate()
 ]
