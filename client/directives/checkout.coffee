@@ -36,6 +36,7 @@ angular.module('gi.commerce').directive 'giCheckout'
     $scope.cart = Cart
     $scope.isSpinnerShown = false
     $scope.inPayment = false
+    $scope.lastNameRegex = /(^[a-zA-Z]{2,}$)/
 
     setPaymentDate = () ->
       $scope.nextPaymentDate = new Date()
