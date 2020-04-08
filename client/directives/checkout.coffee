@@ -95,7 +95,11 @@ angular.module('gi.commerce').directive 'giCheckout'
         size: size
         backdrop: 'static'
         scope: $scope
+        windowClass: "login-modal-window"
       )
+
+    $scope.closeModal = (closefn) ->
+      closefn()
 
     $scope.getCountrySorter = () ->
       topCodes = []
