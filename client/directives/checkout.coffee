@@ -1,6 +1,6 @@
 angular.module('gi.commerce').directive 'giCheckout'
-, ['giCart', 'usSpinnerService', 'Address', 'giPayment', '$modal', 'giUtil',  '$q'
-, (Cart, Spinner, Address, Payment, $modal, Util, $q) ->
+, ['giCart', 'usSpinnerService', 'Address', 'giPayment', '$modal', 'giUtil',  '$q', '$timeout'
+, (Cart, Spinner, Address, Payment, $modal, Util, $q, $timeout) ->
   restrict : 'E',
   scope:
     model: '='
@@ -37,6 +37,13 @@ angular.module('gi.commerce').directive 'giCheckout'
     $scope.isSpinnerShown = false
     $scope.inPayment = false
     $scope.lastNameRegex = /(^[a-zA-Z]{2,}$)/
+    $scope.isTrial = false
+    $scope.pricesLoaded = false
+    $scope.cartItems = $scope.cart.getItems()
+
+    $timeout ( ()->
+      $scope.pricesLoaded = true
+    ), 1000
 
     setPaymentDate = () ->
       $scope.nextPaymentDate = new Date()
@@ -44,7 +51,6 @@ angular.module('gi.commerce').directive 'giCheckout'
         $scope.nextPaymentDate.setFullYear($scope.nextPaymentDate.getFullYear() + 1)
       else
         $scope.nextPaymentDate.setDate($scope.nextPaymentDate.getDate() + 30)
-
 
     cardElement = Payment.stripe.mountElement('#checkout-card-container', Cart)
     cardElement.on 'change', (event) ->
@@ -59,8 +65,23 @@ angular.module('gi.commerce').directive 'giCheckout'
       if me?.user?
         setPaymentDate()
         Cart.setCustomer(me.user)
+        $scope.isTrial = !me.user.trialUsed
         Address.query({ userId: me.user._id }).then (addresses) ->
-          $scope.cart.addresses = addresses        
+          $scope.cart.addresses = addresses
+      else
+        $scope.isTrial = true
+
+    $scope.$watch 'cartItems.length', () ->
+      itemFound = false
+      console.log('cartItems.length')
+      for item in $scope.cartItems
+        console.dir(item.getData())
+        if item.getData().trialItem
+          itemFound = true
+          $scope.subscriptionItem = item
+
+      if !itemFound
+        $scope.subscriptionItem = undefined
 
     $scope.$watch 'model.userCountry', (newVal) ->
       if newVal?
@@ -68,7 +89,7 @@ angular.module('gi.commerce').directive 'giCheckout'
 
     $scope.subscribeNow = () ->
       wrapSpinner(invokeCartPayment())
-    
+
     $scope.$on 'giCart:paymentFailed', (e, data) ->
       if data?
         $scope.errorMessage = data;
