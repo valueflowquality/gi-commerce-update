@@ -1,11 +1,11 @@
-<div class="container preloader-wrapper" ng-if="pageReady == false">
+<div class="container preloader-wrapper" ng-if="pageReady == false || !pricesLoaded">
   <div class="preloader">
     <div class="dot"></div>
     <div class="dot"></div>
     <div class="dot"></div>
   </div>
 </div>
-<div ng-show="pageReady" class="container gi-cart checkout-container">
+<div ng-show="pageReady && pricesLoaded" class="container gi-cart checkout-container">
   <div class="row" ng-show="cart.totalItems() === 0 && !inPayment">
     <div class="col-xs-12 col-sm-6 col-sm-offset-3 well">
       <p>Your cart is empty</p>
@@ -20,13 +20,31 @@
             <tfoot>
               <tr class="checkout-total-row">
                 <th>Total</th>
-                <th><div class="pull-right">{{ cart.totalCost() | giCurrency:cart.getCurrencySymbol() }}</div></th>
+                <th><div class="pull-right">{{ cart.totalCost(isTrial) | giCurrency:cart.getCurrencySymbol() }}</div></th>
               </tr>
             </tfoot>
             <tbody>
-              <tr ng-repeat="item in cart.getItems() track by $index">
-                <td><div class="item-title">{{ item.getName() }}</div><div class="item-description">{{ item.getData().basketDescription }}</div></td>
-                <td><div class="pull-right item-price">{{ item.getTotal(cart.getPricingInfo()) | giCurrency:cart.getCurrencySymbol() }}<div ng-click="cart.removeItem($index)" class="remove-icon"></span></div></td>
+              <tr ng-repeat="item in cartItems track by $index">
+                <td ng-if="!isTrial || !item.getData().trialItem">
+                  <div class="item-title">{{ item.getName() }}</div>
+                  <div class="item-description">{{ item.getData().basketDescription }}</div>
+                </td>
+                <td ng-if="!isTrial || !item.getData().trialItem" class="relative-cell">
+                  <div class="pull-right item-price">{{ item.getTotal(cart.getPricingInfo()) | giCurrency:cart.getCurrencySymbol() }}<div ng-click="cart.removeItem($index)" class="remove-icon"></div></div>
+                </td>
+                <td ng-if="isTrial && item.getData().trialItem">
+                  <div class="item-title">{{ item.getName() }}</div>
+                  <div class="item-description">{{ item.getData().basketDescription }}</div>
+                  <div class="subscription-title">30-Day Free Trial</div>
+                  <div class="subscription-container">
+                    <div class="subscription-container-title">{{item.getTotal(cart.getPricingInfo()) | giCurrency:cart.getCurrencySymbol()}}/year starting {{nextPaymentDate.getDate()}} {{nextPaymentDate.toLocaleString('default', { month: 'long' })}}, {{nextPaymentDate.getFullYear()}}</div>
+                    <div class="subscription-container-description">1 week before the expiration date we’ll send you an email reminding you of your upcoming charge date</div>
+                  </div>
+                </td>
+                <td ng-if="isTrial && item.getData().trialItem" class="relative-cell">
+                  <div class="pull-right item-price">{{ '0.00' | giCurrency:cart.getCurrencySymbol() }}<div ng-click="cart.removeItem($index)" class="remove-icon"></div>
+                  </div>
+                </td>
               </tr>
             </tbody>
           </table>
@@ -343,11 +361,11 @@
             <div class="checkout-form-section-title input-adjustment">
               Review & confirm
             </div>
-            <p ng-if="!model.me.user.trialUsed">
-              A 30 day free trial will be applied to your first subscription. Your VFQ Membership will be valid until {{nextPaymentDate.getDate()}} {{nextPaymentDate.toLocaleString('default', { month: 'long' })}} {{nextPaymentDate.getFullYear()}}.
+            <p ng-if="isTrial && subscriptionItem">
+              Your free trial begins today and is valid for 30-days. You will be charged <b>{{ subscriptionItem.getTotal(cart.getPricingInfo()) | giCurrency:cart.getCurrencySymbol() }}</b> on <b>{{nextPaymentDate.getDate()}} {{nextPaymentDate.toLocaleString('default', { month: 'long' })}}, {{nextPaymentDate.getFullYear()}}</b> and the subscription will automatically renew each year unless you cancel.
             </p>
-            <p ng-if="model.me.user.trialUsed">
-              You will be charged once upon confirmation of your purchase. Your VFQ Membership will be valid until {{nextPaymentDate.getDate()}} {{nextPaymentDate.toLocaleString('default', { month: 'long' })}} {{nextPaymentDate.getFullYear()}}.
+            <p ng-if="!isTrial && subscriptionItem">
+              You will be charged once upon confirmation of your purchase. Your VFQ Membership will be valid until {{nextPaymentDate.getDate()}} {{nextPaymentDate.toLocaleString('default', { month: 'long' })}}, {{nextPaymentDate.getFullYear()}}.
             </p>
             <p>
               By continuing with this purchase you agree to our <a class="checkout-href" href="/terms-and-conditions">Terms and Conditions</a>.
