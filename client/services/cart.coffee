@@ -73,7 +73,7 @@ angular.module('gi.commerce').provider 'giCart', () ->
 
 
 
-    calculateTaxRate = (code) ->
+    calculateTaxRate = (code, removedVat) ->
       vatNumber = code or c.company?.VAT
       deferred = $q.defer()
       countryCode = cart.country.code
@@ -83,12 +83,13 @@ angular.module('gi.commerce').provider 'giCart', () ->
         cart.tax = data.rate
         cart.taxName = data.name
         cart.taxApplicable = (data.rate > 0)
+        cart.taxExempt = false
 
-        if (cart.tax > 0) and vatNumber?
+        if (cart.tax > 0) and vatNumber and !removedVat
           exp = Util.vatRegex
           match = exp.exec(vatNumber)
           if match?
-            uri = '/api/taxRate?countryCode=' + match[1]
+            uri = '/api/taxRate?countryCode=' + countryCode
             uri += '&vatNumber=' + match[0]
 
           if c.billingAddress?.code?

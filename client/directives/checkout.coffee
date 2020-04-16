@@ -34,6 +34,7 @@ angular.module('gi.commerce').directive 'giCheckout'
 
     $scope.pageReady = true
     $scope.cart = Cart
+    $scope.cart.billingAddress = {}
     $scope.isSpinnerShown = false
     $scope.inPayment = false
     $scope.lastNameRegex = /(^[a-zA-Z]{2,}$)/
@@ -86,7 +87,16 @@ angular.module('gi.commerce').directive 'giCheckout'
 
     $scope.$watch 'model.userCountry', (newVal) ->
       if newVal?
-        wrapSpinner Cart.setCountry(newVal.code)
+        $scope.cart.billingAddress.country = newVal.code
+
+    $scope.$watch 'cart.billingAddress.country', (newVal) ->
+      if newVal
+        wrapSpinner updateCartCountry(newVal)
+
+    updateCartCountry = (country) ->
+      Cart.setCountry(country).then () ->
+        if $scope.checkoutForm.vat
+          $scope.checkoutForm.vat.$validate()
 
     $scope.subscribeNow = () ->
       wrapSpinner(invokeCartPayment())
