@@ -40,6 +40,7 @@ angular.module('gi.commerce').directive 'giCheckout'
     $scope.isTrial = false
     $scope.pricesLoaded = false
     $scope.cartItems = $scope.cart.getItems()
+    $scope.emailRegex = Util.emailRegex
 
     $timeout ( ()->
       $scope.pricesLoaded = true
