@@ -15,7 +15,7 @@ angular.module('gi.security').directive 'giVat'
             deferred.resolve()
         else
           Cart.calculateTaxRate(viewValue).then () ->
-            if Cart.isTaxExempt()
+            if Cart.isTaxExempt() || Cart.isLocalBusiness()
               deferred.resolve()
             else
               deferred.reject()

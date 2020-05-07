@@ -81,6 +81,49 @@ angular.module('gi.commerce').filter('giMarketId', [
   }
 ]);
 
+angular.module('gi.commerce').filter('giCurrency', [
+  '$filter', function($filter) {
+    return function(amount, currencySymbol, fractionSize) {
+      if (angular.isFunction(currencySymbol)) {
+        currencySymbol = currencySymbol();
+      }
+      return $filter('currency')(amount, currencySymbol, fractionSize);
+    };
+  }
+]);
+
+angular.module('gi.commerce').filter('giCurrencyId', [
+  'giCurrency', function(Currency) {
+    return function(currencyId) {
+      var cur, result;
+      result = "N/A";
+      if (currencyId != null) {
+        cur = Currency.getCached(currencyId);
+        if (cur != null) {
+          result = cur.symbol + ' ' + cur.code;
+        }
+      }
+      return result;
+    };
+  }
+]);
+
+angular.module('gi.commerce').filter('giMarketId', [
+  'giMarket', function(Model) {
+    return function(id) {
+      var cur, result;
+      result = "N/A";
+      if (id != null) {
+        cur = Model.getCached(id);
+        if (cur != null) {
+          result = cur.code;
+        }
+      }
+      return result;
+    };
+  }
+]);
+
 var indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
 angular.module('gi.commerce').directive('giAddressFormFields', [
@@ -454,9 +497,7 @@ angular.module('gi.commerce').directive('giCheckout', [
         updateCartCountry = function(country) {
           return Cart.setCountry(country).then(function() {
             if ($scope.checkoutForm.vat) {
-              $scope.checkoutForm.vat.$validate();
-              console.log("checkoutForm");
-              return console.dir($scope.checkoutForm.vat);
+              return $scope.checkoutForm.vat.$validate();
             }
           });
         };
@@ -909,12 +950,6 @@ angular.module('gi.commerce').directive('giDiscountForm', [
   }
 ]);
 
-angular.module('gi.commerce').directive('giMarketForm', [
-  '$q', 'giCrud', 'giMarket', function($q, Crud, Model) {
-    return Crud.formDirectiveFactory('Market', Model);
-  }
-]);
-
 angular.module("gi.commerce").run(["$templateCache", function($templateCache) {$templateCache.put("gi.commerce.addressFormFields.html","<div ng-if=\"!selectaddress && item._id\" class=\"pull-right\"><a class=\"text-danger\" ng-click=\"deleteAddress(item)\">x</a></div>\r\n<legend>{{title}}   <h4 class=\"pull-right\" style=\"font-size: 11px;\"><span class=\"req\">*</span> Marks a required field.</h4>\r\n</legend>\r\n\r\n<div ng-if=\"selectaddress && addresses.length\" class=\"form-group\">\r\n  <label class=\"control-label\">Existing Address:</label>\r\n    <ui-select  tabindex=\"{{options.tabIndex + 1}}\" ng-model=\"selectedAddress\" ng-change=\"updateAddress(selectedAddress)\">\r\n      <ui-select-match>{{$select.selected.name}}</ui-select-match>\r\n      <ui-select-choices repeat=\"t in addresses | filter: $select.search\">\r\n        <div ng-bind=\"t.name ? t.name : t.line1\"></div>\r\n      </ui-select-choices>\r\n    </ui-select>\r\n</div>\r\n<div ng-if=\"!selectaddress\" class=\"form-group\"\r\n     ng-class=\"{\r\n       \'has-error\': isPropertyValidationError(\'{{prefix}}-name\'),\r\n       \'has-success\': isPropertyValidationSuccess(\'{{prefix}}-name\')}\">\r\n  <label class=\"control-label\">Address Name <span class=\"req\">*</span> : </label>\r\n  <input type=\"text\"\r\n         class=\"form-control\"\r\n         name=\"{{prefix}}-name\"\r\n         ng-model=\"item.name\"\r\n         required tabindex=\"{{options.tabIndex}}\"/>\r\n</div>\r\n<div class=\"form-group\"\r\n     ng-class=\"{\r\n       \'has-error\': isPropertyValidationError(\'{{prefix}}-line1\'),\r\n       \'has-success\': isPropertyValidationSuccess(\'{{prefix}}-line1\')}\">\r\n  <label class=\"control-label\">Address Line 1 <span class=\"req\">*</span> : </label>\r\n  <input type=\"text\"\r\n         class=\"form-control\"\r\n         name=\"{{prefix}}-line1\"\r\n         ng-model=\"item.line1\"\r\n         required tabindex=\"{{options.tabIndex}}\"/>\r\n   <p class=\"control-label\" ng-show=\"isPropertyValidationError(\'{{prefix}}-line1\')\">\r\n     Required\r\n   </p>\r\n</div>\r\n<div class=\"form-group\" >\r\n  <label class=\"control-label\">Address Line 2:</label>\r\n  <input type=\"text\"\r\n         class=\"form-control\"\r\n         name=\"{{prefix}}-line2\"\r\n         ng-model=\"item.line2\" tabindex=\"{{options.tabIndex}}\"/>\r\n</div>\r\n<div class=\"form-group\"\r\n     ng-class=\"{\r\n       \'has-error\': isPropertyValidationError(\'{{prefix}}-city\'),\r\n       \'has-success\': isPropertyValidationSuccess(\'{{prefix}}-city\')}\">\r\n  <label class=\"control-label\">City <span class=\"req\">*</span> :</label>\r\n  <input type=\"text\"\r\n         class=\"form-control\"\r\n         name=\"{{prefix}}-city\"\r\n         ng-model=\"item.city\"\r\n         required tabindex=\"{{options.tabIndex}}\"/>\r\n   <p class=\"control-label\" ng-show=\"isPropertyValidationError(\'{{prefix}}-city\')\">\r\n     Required\r\n   </p>\r\n</div>\r\n<div class=\"form-group\"\r\n     ng-class=\"{\r\n       \'has-error\': isPropertyValidationError(\'{{prefix}}-state\'),\r\n       \'has-success\': isPropertyValidationSuccess(\'{{prefix}}-state\')}\">\r\n  <label class=\"control-label\">{{getStateMessage()}} <span class=\"req\">*</span> :</label>\r\n  <input type=\"text\"\r\n         class=\"form-control\"\r\n         name=\"{{prefix}}-state\"\r\n         ng-model=\"item.state\"\r\n         required tabindex=\"{{options.tabIndex}}\"/>\r\n   <p class=\"control-label\" ng-show=\"isPropertyValidationError(\'{{prefix}}-state\')\">\r\n      Required\r\n   </p>\r\n</div>\r\n<div class=\"form-group\"\r\n     ng-class=\"{\r\n       \'has-error\': isPropertyValidationError(\'{{prefix}}-code\'),\r\n       \'has-success\': isPropertyValidationSuccess(\'{{prefix}}-code\')}\">\r\n  <label class=\"control-label\">Post / Zip Code <span class=\"req\">*</span> :</label>\r\n  <input type=\"text\"\r\n         class=\"form-control\"\r\n         name=\"{{prefix}}-code\"\r\n         ng-model=\"item.code\"\r\n         required tabindex=\"{{options.tabIndex}}\"/>\r\n   <p class=\"control-label\" ng-show=\"isPropertyValidationError(\'{{prefix}}-code\')\">\r\n      Required\r\n   </p>\r\n</div>\r\n<div class=\"form-group\"    ng-class=\"{\'has-success\': validCountry}\">\r\n  <label  class=\"control-label\">Country <span class=\"req\">*</span>:</label>\r\n\r\n  <ui-select  tabindex=\"{{options.tabIndex}}\" required on-select=\"checkValid($select.selected.name)\" ng-model=\"item.country\">\r\n    <ui-select-match >{{$select.selected.name}}</ui-select-match>\r\n    <ui-select-choices\r\n repeat=\"t.code as t in model.countries | orderBy:getCountrySorter() | filter: $select.search\">\r\n      <div ng-bind-html=\"t.name | highlight: $select.search\"></div>\r\n    </ui-select-choices>\r\n  </ui-select>\r\n</div>\r\n\r\n  <div class=\"form-group\" ng-if=\"options.showPhone()\"\r\n       ng-class=\"{\r\n         \'has-error\': isPropertyValidationError(\'{{prefix}}-phone\'),\r\n         \'has-success\': isPropertyValidationSuccess(\'{{prefix}}-phone\')}\">\r\n    <label class=\"control-label\">Phone Number (for Delivery Courier) <span class=\"req\">*</span> :</label>\r\n    <input type=\"text\"\r\n        class=\"form-control\"\r\n        name=\"{{prefix}}-phone\"\r\n        ng-model=\"item.phone\"\r\n        required tabindex=\"{{options.tabIndex}}\"/>\r\n    <p class=\"control-label\" ng-show=\"isPropertyValidationError(\'{{prefix}}-phone\')\">\r\n     Required\r\n    </p>\r\n  </div>\r\n");
 $templateCache.put("gi.commerce.addtocart.html","<div ng-hide=\"attrs.id\">\r\n    <a class=\"btn btn-lg btn-primary\" ng-disabled=\"true\" ng-transclude></a>\r\n</div>\r\n<div ng-show=\"attrs.id\">\r\n    <div ng-hide=\"inCart()\">\r\n        <a class=\"btn btn-lg btn-primary\"\r\n           ng-click=\"addItem(item)\"\r\n           ng-transclude></a>\r\n    </div>\r\n    <div class=\"alert alert-info\"  ng-show=\"inCart()\">\r\n        This item is in your cart\r\n    </div>\r\n</div>\r\n");
 $templateCache.put("gi.commerce.cart.html","<div class=\"row\">\r\n  <div class=\"col-xs-12 col-sm-6 col-sm-offset-3 well\" ng-show=\"giCart.totalItems() === 0\">\r\n    <p>Your cart is empty</p>\r\n  </div>\r\n  <div class=\"col-xs-12\">\r\n    <span us-spinner=\"{radius:30, width:8, length: 16}\" spinner-key=\"gi-cart-spinner-1\"></span>\r\n    <div class=\"table-responsive hidden-xs\" ng-show=\"giCart.totalItems() > 0\">\r\n      <table class=\"table giCart cart\">\r\n        <thead>\r\n          <tr>\r\n            <th></th>\r\n            <th></th>\r\n            <th></th><!-- <th>Quantity</th> -->\r\n            <!-- <th ng-if=\"giCart.isTaxApplicable()\"><div class=\"pull-right\">Tax</div></th>\r\n            <th><div class=\"pull-right\">Total</div></th> -->\r\n            <th></th>\r\n            <th></th>\r\n\r\n            <th><div class=\"pull-right\">Amount</div></th>\r\n\r\n          </tr>\r\n        </thead>\r\n        <tfoot>\r\n          <tr ng-show=\"giCart.getShipping()\">\r\n            <th></th>\r\n            <th></th>\r\n            <th></th>\r\n            <th></th>\r\n            <th>Shipping:</th>\r\n            <th><div class=\"pull-right\">{{ giCart.getShipping() | giCurrency:giCart.getCurrencySymbol }}</div></th>\r\n          </tr>\r\n          <tr >\r\n            <th></th>\r\n            <th></th>\r\n            <th></th>\r\n            <th ></th>\r\n            <th><div class=\"pull-right\">Sub Total\r\n              <span ng-if=\"giCart.hasDiscount()\"> incl {{giCart.getDiscount()}}% Discount</span>:</div></th>\r\n              <th><div class=\"pull-right\">{{ giCart.getSubTotal() - giCart.discount()| giCurrency:giCart.getCurrencySymbol}}  </div></th>\r\n            </tr>\r\n            <tr ng-if=\"giCart.isTaxApplicable()\">\r\n              <th></th>\r\n              <th></th>\r\n              <th></th>\r\n              <th></th>\r\n              <th><div class=\"pull-right\">Tax:</div></th>\r\n              <th><div class=\"pull-right\">{{ giCart.getTaxTotal() | giCurrency:giCart.getCurrencySymbol }}</div></th>\r\n            </tr>\r\n            <tr>\r\n              <th></th>\r\n              <th></th>\r\n              <th></th>\r\n              <th></th>\r\n              <th><div class=\"pull-right\">Total:</div></th>\r\n              <th><div class=\"pull-right\">{{ giCart.totalCost() | giCurrency:giCart.getCurrencySymbol }}</div></th>\r\n            </tr>\r\n          </tfoot>\r\n          <tbody>\r\n            <tr ng-repeat=\"item in giCart.getItems() track by $index\">\r\n              <td><span ng-click=\"giCart.removeItem($index)\" class=\"glyphicon glyphicon-remove\"></span></td>\r\n              <td>{{ item.getName() }}</td>\r\n              <!-- <td><span class=\"glyphicon glyphicon-minus\" ng-class=\"{\'disabled\':item.getQuantity()==1}\"\r\n                ng-click=\"item.getQuantity()==1 ? giCart.removeItem($index) : item.setQuantity(-1, true)\"></span>&nbsp;&nbsp;\r\n\r\n                <input class=\"counter-input\" maxlength=\"3\" type=\"text\"  ng-model=\"item._quantity\" ng-change=\"item.setQuantity(item._quantity)\">&nbsp;&nbsp;\r\n\r\n                <span class=\"glyphicon glyphicon-plus\" ng-click=\"item.setQuantity(1, true)\"></span></td> -->\r\n              <td><div class=\"pull-right\"></div></td>\r\n              <td ng-if=\"giCart.isTaxApplicable()\"><div class=\"pull-right\"></div></td>\r\n              <td><div class=\"pull-right\"></div></td>\r\n              <td ng-if=\"!giCart.isTaxApplicable()\" ><div class=\"pull-right\"></div></td>\r\n\r\n              <td><div class=\"pull-right\">{{ item.getSubTotal(giCart.getPricingInfo()) | giCurrency:giCart.getCurrencySymbol}}</div></td>\r\n            </tr>\r\n          </tbody>\r\n        </table>\r\n\r\n        </div>\r\n        <div class=\"visible-xs\" ng-show=\"giCart.totalItems() > 0\">\r\n          <div class=\"mobile-cart-box well\" ng-repeat=\"item in giCart.getItems() track by $index\">\r\n            <h4>{{item.getName() }} </h4>\r\n            <div class=\"row\">\r\n              <div class=\"col-xs-3\">\r\n                <p> Quantity: </p>\r\n              </div>\r\n              <div class=\"col-xs-3\">\r\n                <p> Price: </p>\r\n              </div>\r\n              <div class=\"col-xs-3\" ng-if=\"giCart.isTaxApplicable()\">\r\n                <p> Tax: </p>\r\n              </div>\r\n            </div>\r\n            <div class=\"row\">\r\n              <div class=\"col-xs-3\">\r\n                <p><span class=\"glyphicon glyphicon-minus\" ng-class=\"{\'disabled\':item.getQuantity()==1}\"\r\n                  ng-click=\"item.setQuantity(-1, true)\"></span>&nbsp;&nbsp;\r\n                  {{ item.getQuantity() | number }}&nbsp;&nbsp;\r\n                  <span class=\"glyphicon glyphicon-plus\" ng-click=\"item.setQuantity(1, true)\"></span>\r\n                </p>\r\n              </div>\r\n              <div class=\"col-xs-3\">\r\n                <p>{{ item.getSubTotal(giCart.getPricingInfo()) | giCurrency:giCart.getCurrencySymbol}}</p>\r\n              </div>\r\n              <div class=\"col-xs-3\" ng-if=\"giCart.isTaxApplicable()\">\r\n                <p>{{ item.getTaxTotal(giCart.getPricingInfo()) | giCurrency:giCart.getCurrencySymbol}}</p>\r\n              </div>\r\n              <div class=\"col-xs-3\">\r\n                <p><a ng-click=\"giCart.removeItem($index)\"> Remove </a></p>\r\n              </div>\r\n            </div>\r\n          </div>\r\n          <div class=\"well\" style=\"height: 200px;\">\r\n            <h4>Order Summary </h4>\r\n            <div class=\"row\">\r\n              <div class=\"col-xs-6\">\r\n                <p style=\"text-align: left;\"> Sub Total<span ng-if=\"giCart.hasDiscount()\"> incl {{giCart.getDiscount()}}% discount</span>:  </p>\r\n              </div>\r\n              <div class=\"col-xs-6\">\r\n                <p style=\"text-align:right\">{{ giCart.getSubTotal() - giCart.discount()| giCurrency:giCart.getCurrencySymbol}}</p>\r\n              </div>\r\n            </div>\r\n            <div class=\"row\">\r\n              <div class=\"col-xs-6\">\r\n                  <p style=\"text-align: left;\"> Total Tax: </p>\r\n              </div>\r\n              <div class=\"col-xs-6\">\r\n                <p style=\"text-align:right\">{{ giCart.getTaxTotal() | giCurrency:giCart.getCurrencySymbol }}</p>\r\n              </div>\r\n            </div>\r\n            <div class=\"row\">\r\n              <div class=\"col-xs-6\" ng-show=\"giCart.getShipping()\">\r\n                <p style=\"text-align:right\"> Shipping: </p>\r\n              </div>\r\n\r\n              <div class=\"col-xs-6\" ng-show=\"giCart.getShipping()\">\r\n                <p style=\"text-align:right\">{{ giCart.getShipping() | giCurrency:giCart.getCurrencySymbol }}</p>\r\n              </div>\r\n\r\n            </div>\r\n\r\n            <div class=\"row\">\r\n              <div class=\"col-xs-6\"><p style=\" text-align: left; font-weight: bold\"> Order Total: </p></div>\r\n              <div class=\"col-xs-6\">\r\n                <p style=\"text-align:right\"><strong>{{ giCart.totalCost() | giCurrency:giCart.getCurrencySymbol }}</strong></p>\r\n              </div>\r\n            </div>\r\n          </div>\r\n        </div>\r\n      </div>\r\n    </div>\r\n    <gi-discount-form>\r\n    </gi-discount-form>\r\n\r\n    <style>\r\n    .giCart.cart span[ng-click] {\r\n      cursor: pointer;\r\n    }\r\n    .giCart.cart .glyphicon.disabled {\r\n      color:#aaa;\r\n    }\r\n    </style>\r\n");
@@ -931,6 +966,12 @@ $templateCache.put("gi.commerce.orderSummary.html","<div class = \"form-inline w
 $templateCache.put("gi.commerce.paymentInfo.html","<div class=\"row\">\r\n  <div class=\"col-xs-12\">\r\n    <span us-spinner=\"{radius:30, width:8, length: 16}\" spinner-key=\"gi-cart-spinner-1\"></span>\r\n    <div ng-form name=\"cardForm\" class=\"well form\">\r\n      <legend>Please enter your card details</legend>\r\n      <div id=\"card-element\"></div>\r\n    </div>\r\n  </div>\r\n</div>\r\n");
 $templateCache.put("gi.commerce.priceForm.html","<div ng-form name=\"priceForm\" class=\"well form\">\r\n  <div class=\"form-group\">\r\n    <label>Name:</label>\r\n    <input type=\"text\"\r\n           class=\"form-control\"\r\n           name=\"priceListName\"\r\n           ng-model=\"model.selectedItem.name\"/>\r\n  </div>\r\n  <div class=\"form-group\">\r\n    <label>Call To Action Text:</label>\r\n    <input type=\"text\"\r\n           class=\"form-control\"\r\n           name=\"ctaText\"\r\n           ng-model=\"model.selectedItem.ctaText\"/>\r\n  </div>\r\n  <div class=\"form-group\">\r\n    <label>Prices:</label>\r\n    <div ng-repeat=\"(code, price) in model.selectedItem.prices\">\r\n      <div class=\"input-group\">\r\n         <div class=\"input-group-addon market\">{{code}}</div>\r\n         <input type=\"text\" class=\"form-control\" id=\"exampleInputAmount\" placeholder=\"Amount\" ng-model=\"model.selectedItem.prices[code]\"/>\r\n         <div class=\"input-group-addon\" ng-click=\"removePriceForMarket(code)\">  <span class=\"glyphicon glyphicon-trash\" aria-hidden=\"true\"></span></div>\r\n       </div>\r\n    </div>\r\n  </div>\r\n  <div class=\"form-group\">\r\n    <div class=\"input-group\">\r\n      <div class=\"input-group-addon market\" style=\"\">\r\n        <ui-select ng-model=\"local.code\">\r\n           <ui-select-match>{{$select.selected.code}}</ui-select-match>\r\n           <ui-select-choices repeat=\"c.code as c in model.markets  | filter: $select.search\">\r\n             <div ng-bind-html=\"c.code | highlight: $select.search\"></div>\r\n           </ui-select-choices>\r\n        </ui-select>\r\n      </div>\r\n      <input type=\"text\" class=\"form-control market-pick\" id=\"exampleInputAmount\" placeholder=\"Enter Amount\" ng-model=\"local.price\"/>\r\n      <div class=\"input-group-addon\" ng-click=\"savePriceForMarket(local.code)\">  <span class=\"glyphicon glyphicon-save\" aria-hidden=\"true\"></span></div>\r\n     </div>\r\n  </div>\r\n  <div class=\"form-group\">\r\n    <button class=\"form-control btn btn-success btn-save-asset\"\r\n            ng-click=\"save()\">{{submitText}}</button>\r\n  </div>\r\n  <div class=\"form-group\" ng-show=\"priceForm.$dirty || model.selectedItem._id\">\r\n    <button class=\"form-control btn btn-warning\"\r\n            ng-click=\"clear()\">Cancel</button>\r\n  </div>\r\n  <div class=\"form-group\" ng-show=\"model.selectedItem._id\">\r\n    <button class=\"form-control btn btn-danger\" ng-click=\"destroy()\">\r\n      Delete <span ng-if=\"confirm\">- Are you sure? Click again to confirm</span>\r\n    </button>\r\n  </div>\r\n</div>\r\n");
 $templateCache.put("gi.commerce.summary.html","<div class=\"row\">\r\n  <div class=\"col-xs-5\">\r\n    <span class=\"fa fa-shopping-cart fa-lg\"></span>\r\n  </div>\r\n  <div class=\"col-xs-7\">\r\n    <span class=\"badge\">{{ giCart.totalQuantity() }}</span>\r\n  </div>\r\n</div>\r\n");}]);
+angular.module('gi.commerce').directive('giMarketForm', [
+  '$q', 'giCrud', 'giMarket', function($q, Crud, Model) {
+    return Crud.formDirectiveFactory('Market', Model);
+  }
+]);
+
 angular.module('gi.commerce').directive('giOrderSummary', [
   'giCart', function(Cart) {
     return {
@@ -1121,9 +1162,8 @@ angular.module('gi.security').directive('giVat', [
                 return deferred.resolve();
               });
             } else {
-              console.log("defined");
               Cart.calculateTaxRate(viewValue).then(function() {
-                if (Cart.isTaxExempt()) {
+                if (Cart.isTaxExempt() || Cart.isLocalBusiness()) {
                   return deferred.resolve();
                 } else {
                   return deferred.reject();
@@ -1370,36 +1410,40 @@ angular.module('gi.commerce').provider('giCart', function() {
           taxApplicable: false,
           discountPercent: 0,
           checkoutFormValid: false,
-          cardElementValid: void 0
+          cardElementValid: void 0,
+          business: false,
+          isLocalBusiness: false
         };
       };
       save = function() {
         return store.set('cart', cart);
       };
       calculateTaxRate = function(code, removedVat) {
-        var countryCode, deferred, ref, ref1, uri, vatNumber;
+        var countryCode, deferred, ref, uri, vatNumber;
         vatNumber = code || ((ref = c.company) != null ? ref.VAT : void 0);
-        console.log("code");
-        console.dir(code);
-        console.log("c.company?.VAT");
-        console.dir((ref1 = c.company) != null ? ref1.VAT : void 0);
         deferred = $q.defer();
         countryCode = cart.country.code;
         uri = '/api/taxRate?countryCode=' + countryCode;
         $http.get(uri).success(function(data) {
-          var exp, match, ref2;
+          var exp, match, ref1;
           cart.tax = data.rate;
           cart.taxName = data.name;
           cart.taxApplicable = data.rate > 0;
           cart.taxExempt = false;
+          cart.isLocalBusiness = false;
           if ((cart.tax > 0) && vatNumber && !removedVat) {
             exp = Util.vatRegex;
             match = exp.exec(vatNumber);
             if (match != null) {
+              if (cart.country.code === "IE" && match[1] === "IE") {
+                cart.isLocalBusiness = true;
+                deferred.resolve(data);
+                return;
+              }
               uri = '/api/taxRate?countryCode=' + countryCode;
               uri += '&vatNumber=' + match[0];
             }
-            if (((ref2 = c.billingAddress) != null ? ref2.code : void 0) != null) {
+            if (((ref1 = c.billingAddress) != null ? ref1.code : void 0) != null) {
               uri += '&postalCode=' + c.billingAddress.code;
             }
             return $http.get(uri).success(function(exemptionData) {
@@ -1472,6 +1516,9 @@ angular.module('gi.commerce').provider('giCart', function() {
         },
         isTaxExempt: function() {
           return cart.taxExempt;
+        },
+        isLocalBusiness: function() {
+          return cart.isLocalBusiness;
         },
         taxName: function() {
           return cart.taxName;
@@ -1832,6 +1879,11 @@ angular.module('gi.commerce').provider('giCart', function() {
               return results;
             })()
           };
+          if (that.business) {
+            subscriptionRequest.business = that.business;
+            subscriptionRequest.vat = that.company.VAT;
+            subscriptionRequest.company = that.company.name;
+          }
           $http.post('/api/createSubscription', subscriptionRequest).success(function(subscription) {
             var clientSecret, latestInvoice, paymentIntent, status;
             latestInvoice = subscription.latest_invoice;
@@ -2602,49 +2654,6 @@ angular.module('gi.commerce').factory('giProduct', [
       save: save,
       destroy: crudService.destroy,
       forCategory: forCategory
-    };
-  }
-]);
-
-angular.module('gi.commerce').filter('giCurrency', [
-  '$filter', function($filter) {
-    return function(amount, currencySymbol, fractionSize) {
-      if (angular.isFunction(currencySymbol)) {
-        currencySymbol = currencySymbol();
-      }
-      return $filter('currency')(amount, currencySymbol, fractionSize);
-    };
-  }
-]);
-
-angular.module('gi.commerce').filter('giCurrencyId', [
-  'giCurrency', function(Currency) {
-    return function(currencyId) {
-      var cur, result;
-      result = "N/A";
-      if (currencyId != null) {
-        cur = Currency.getCached(currencyId);
-        if (cur != null) {
-          result = cur.symbol + ' ' + cur.code;
-        }
-      }
-      return result;
-    };
-  }
-]);
-
-angular.module('gi.commerce').filter('giMarketId', [
-  'giMarket', function(Model) {
-    return function(id) {
-      var cur, result;
-      result = "N/A";
-      if (id != null) {
-        cur = Model.getCached(id);
-        if (cur != null) {
-          result = cur.code;
-        }
-      }
-      return result;
     };
   }
 ]);
