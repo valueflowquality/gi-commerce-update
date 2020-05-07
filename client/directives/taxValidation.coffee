@@ -9,10 +9,13 @@ angular.module('gi.security').directive 'giVat'
       controller.$asyncValidators.giVat = (modelValue, viewValue) ->
         deferred = $q.defer()
         if (not viewValue?) or viewValue is ""
-          deferred.resolve()
+          Cart.calculateTaxRate(viewValue, true).then () ->
+            deferred.resolve()
+          , (error) ->
+            deferred.resolve()
         else
           Cart.calculateTaxRate(viewValue).then () ->
-            if Cart.isTaxExempt()
+            if Cart.isTaxExempt() || Cart.isLocalBusiness()
               deferred.resolve()
             else
               deferred.reject()
