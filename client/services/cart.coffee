@@ -454,7 +454,7 @@ angular.module('gi.commerce').provider 'giCart', () ->
             billing_details: {
               email: that.customer.email
             }
-          ).then( (result) ->
+          ).then (result) ->
             if result.paymentMethod
               that.submitSubscriptionRequest(result.paymentMethod).then( () ->
                 $rootScope.$broadcast('giCart:paymentCompleted')
@@ -477,7 +477,10 @@ angular.module('gi.commerce').provider 'giCart', () ->
               if result.error
                 $rootScope.$broadcast('giCart:paymentFailed', result.error)
               deferred.reject()
-          )
+          .catch () ->
+            deferred.reject()
+        else
+          deferred.reject()
         deferred.promise
 
       submitSubscriptionRequest: (paymentMethod) ->
