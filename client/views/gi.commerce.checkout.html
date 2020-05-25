@@ -79,7 +79,7 @@
               </div>
             </div>
           </div>
-          <div class="section-box main-account-section" ng-if="!model.me.loggedIn">
+          <div class="section-box" ng-if="!model.me.loggedIn">
             <div class="login-reminder-container">
               <span class="sign-in-text">Already have an account? <a class="checkout-href" ng-click="showLoginModal()">Sign in</a></span>
             </div>
@@ -354,7 +354,7 @@
                     </div>
                   </div>
                 </div><!--
-                --><div class="checkout-three-quarter-row checkout-input-wrapper">
+                --><div class="country-row checkout-input-wrapper">
                   <div class="form-group" ng-class="{'has-success': validCountry}">
                     <ui-select class="checkout-select" tabindex="1" required on-select="checkValid($select.selected.name)" ng-model="cart.billingAddress.country">
                       <ui-select-match placeholder="Country">{{$select.selected.name}}</ui-select-match>
@@ -364,7 +364,7 @@
                     </ui-select>
                   </div>
                 </div><!--
-                --><div class="checkout-quarter-row postcode-row checkout-input-wrapper form-group">
+                --><div class="postcode-row checkout-input-wrapper form-group">
                   <div class="input-container">
                     <input class="form-control"
                     type="text"
