@@ -1,6 +1,6 @@
 angular.module('gi.commerce').directive 'giCheckout'
-, ['giCart', 'usSpinnerService', 'Address', 'giPayment', '$modal', 'giUtil',  '$q', '$timeout'
-, (Cart, Spinner, Address, Payment, $modal, Util, $q, $timeout) ->
+, ['giCart', 'usSpinnerService', 'Address', 'giPayment', '$modal', 'giUtil',  '$q', '$timeout', 'deviceDetector', '$location'
+, (Cart, Spinner, Address, Payment, $modal, Util, $q, $timeout, deviceDetector, $location) ->
   restrict : 'E',
   scope:
     model: '='
@@ -120,6 +120,13 @@ angular.module('gi.commerce').directive 'giCheckout'
     $scope.removeError = () ->
       $scope.errorMessage = "";
 
+    $scope.showLoginForm = () ->
+      $scope.navbarCollapsed = true
+      if $scope.isMobile()
+        $location.path('login').search('next', '/a/dashboard')
+      else
+        $scope.showLoginModal()
+
     $scope.showLoginModal = (size) ->
       modalInstance = $modal.open(
         templateUrl: 'vfq.loginModal.html'
@@ -132,6 +139,9 @@ angular.module('gi.commerce').directive 'giCheckout'
 
     $scope.closeModal = (closefn) ->
       closefn()
+
+    $scope.isMobile = () ->
+      deviceDetector.isMobile()
 
     $scope.getCountrySorter = () ->
       topCodes = []
