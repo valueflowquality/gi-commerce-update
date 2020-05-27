@@ -123,7 +123,7 @@ angular.module('gi.commerce').directive 'giCheckout'
     $scope.showLoginForm = () ->
       $scope.navbarCollapsed = true
       if $scope.isMobile()
-        $location.path('login').search('next', '/a/dashboard')
+        $location.path('login').search('next', '/a/checkout')
       else
         $scope.showLoginModal()
 
