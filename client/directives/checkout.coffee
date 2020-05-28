@@ -1,6 +1,6 @@
 angular.module('gi.commerce').directive 'giCheckout'
-, ['giCart', 'usSpinnerService', 'Address', 'giPayment', '$modal', 'giUtil',  '$q', '$timeout'
-, (Cart, Spinner, Address, Payment, $modal, Util, $q, $timeout) ->
+, ['giCart', 'usSpinnerService', 'Address', 'giPayment', '$modal', 'giUtil',  '$q', '$timeout', 'deviceDetector', '$location'
+, (Cart, Spinner, Address, Payment, $modal, Util, $q, $timeout, deviceDetector, $location) ->
   restrict : 'E',
   scope:
     model: '='
@@ -34,6 +34,7 @@ angular.module('gi.commerce').directive 'giCheckout'
 
     $scope.pageReady = true
     $scope.cart = Cart
+    $scope.cart.billingAddress = {}
     $scope.isSpinnerShown = false
     $scope.inPayment = false
     $scope.lastNameRegex = /(^[a-zA-Z]{2,}$)/
@@ -86,7 +87,16 @@ angular.module('gi.commerce').directive 'giCheckout'
 
     $scope.$watch 'model.userCountry', (newVal) ->
       if newVal?
-        wrapSpinner Cart.setCountry(newVal.code)
+        $scope.cart.billingAddress.country = newVal.code
+
+    $scope.$watch 'cart.billingAddress.country', (newVal) ->
+      if newVal
+        wrapSpinner updateCartCountry(newVal)
+
+    updateCartCountry = (country) ->
+      Cart.setCountry(country).then () ->
+        if $scope.checkoutForm.vat
+          $scope.checkoutForm.vat.$validate()
 
     $scope.subscribeNow = () ->
       wrapSpinner(invokeCartPayment())
@@ -110,6 +120,13 @@ angular.module('gi.commerce').directive 'giCheckout'
     $scope.removeError = () ->
       $scope.errorMessage = "";
 
+    $scope.showLoginForm = () ->
+      $scope.navbarCollapsed = true
+      if $scope.isMobile()
+        $location.path('login').search('next', '/a/checkout')
+      else
+        $scope.showLoginModal()
+
     $scope.showLoginModal = (size) ->
       modalInstance = $modal.open(
         templateUrl: 'vfq.loginModal.html'
@@ -122,6 +139,9 @@ angular.module('gi.commerce').directive 'giCheckout'
 
     $scope.closeModal = (closefn) ->
       closefn()
+
+    $scope.isMobile = () ->
+      deviceDetector.isMobile()
 
     $scope.getCountrySorter = () ->
       topCodes = []

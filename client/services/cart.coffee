@@ -66,6 +66,8 @@ angular.module('gi.commerce').provider 'giCart', () ->
         discountPercent: 0
         checkoutFormValid: false
         cardElementValid: undefined
+        business: false
+        isLocalBusiness: false
       return
 
     save = () ->
@@ -73,7 +75,7 @@ angular.module('gi.commerce').provider 'giCart', () ->
 
 
 
-    calculateTaxRate = (code) ->
+    calculateTaxRate = (code, removedVat) ->
       vatNumber = code or c.company?.VAT
       deferred = $q.defer()
       countryCode = cart.country.code
@@ -83,12 +85,18 @@ angular.module('gi.commerce').provider 'giCart', () ->
         cart.tax = data.rate
         cart.taxName = data.name
         cart.taxApplicable = (data.rate > 0)
+        cart.taxExempt = false
+        cart.isLocalBusiness = false
 
-        if (cart.tax > 0) and vatNumber?
+        if (cart.tax > 0) and vatNumber and !removedVat
           exp = Util.vatRegex
           match = exp.exec(vatNumber)
           if match?
-            uri = '/api/taxRate?countryCode=' + match[1]
+            if cart.country.code == "IE" && match[1] == "IE"
+              cart.isLocalBusiness = true
+              deferred.resolve data
+              return
+            uri = '/api/taxRate?countryCode=' + countryCode
             uri += '&vatNumber=' + match[0]
 
           if c.billingAddress?.code?
@@ -164,6 +172,9 @@ angular.module('gi.commerce').provider 'giCart', () ->
 
       isTaxExempt: () ->
         cart.taxExempt
+
+      isLocalBusiness: () ->
+        cart.isLocalBusiness
 
       taxName: () ->
         cart.taxName
@@ -443,7 +454,7 @@ angular.module('gi.commerce').provider 'giCart', () ->
             billing_details: {
               email: that.customer.email
             }
-          ).then( (result) ->
+          ).then (result) ->
             if result.paymentMethod
               that.submitSubscriptionRequest(result.paymentMethod).then( () ->
                 $rootScope.$broadcast('giCart:paymentCompleted')
@@ -466,7 +477,10 @@ angular.module('gi.commerce').provider 'giCart', () ->
               if result.error
                 $rootScope.$broadcast('giCart:paymentFailed', result.error)
               deferred.reject()
-          )
+          .catch () ->
+            deferred.reject()
+        else
+          deferred.reject()
         deferred.promise
 
       submitSubscriptionRequest: (paymentMethod) ->
@@ -485,6 +499,11 @@ angular.module('gi.commerce').provider 'giCart', () ->
             rate: cart.tax
             name: cart.taxName
           items: ({id: item._data._id, name: item._data.name, purchaseType: item._data.purchaseType}) for item in cart.items
+
+        if that.business
+          subscriptionRequest.business = that.business
+          subscriptionRequest.vat = that.company.VAT
+          subscriptionRequest.company = that.company.name
 
         $http.post('/api/createSubscription', subscriptionRequest)
         .success (subscription) ->
