@@ -201,5 +201,12 @@ angular.module('gi.commerce').directive 'giCheckout'
       if pending?
         $scope.cart.setCheckoutFormValidity(false)
 
+    $scope.$watch 'cart.business', (business) ->
+      if !business
+        $scope.cart.company.VAT = null
+        $scope.cart.company.name = null
+        $scope.checkoutForm.vat.$setPristine()
+        $scope.checkoutForm.companyName.$setPristine()
+
     setPaymentDate()
 ]
