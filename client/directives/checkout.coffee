@@ -202,7 +202,7 @@ angular.module('gi.commerce').directive 'giCheckout'
         $scope.cart.setCheckoutFormValidity(false)
 
     $scope.$watch 'cart.business', (business) ->
-      if !business
+      if !business and $scope.cart.company
         $scope.cart.company.VAT = null
         $scope.cart.company.name = null
         $scope.checkoutForm.vat.$setPristine()
