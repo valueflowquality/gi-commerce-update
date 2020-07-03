@@ -22,7 +22,7 @@
           <table class="table checkout-table">
             <tfoot>
               <tr class="checkout-total-row">
-                <th>Today's total</th>
+                <th>Payment Due Today</th>
                 <th><div class="pull-right">{{ cart.totalCost(isTrial) | giCurrency:cart.getCurrencySymbol() }}</div></th>
               </tr>
               <tr class="checkout-subscription" ng-repeat="item in cartItems track by $index" ng-if="isTrial && item.getData().trialItem">
@@ -36,12 +36,19 @@
             </tfoot>
             <tbody>
               <tr ng-repeat="item in cartItems track by $index">
-                <td ng-if="!isTrial || !item.getData().trialItem">
-                  <div class="item-title">{{ item.getName() }}</div>
-                  <div class="item-description">{{ item.getData().basketDescription }}</div>
+                <td ng-if="!isTrial || !item.getData().trialItem" class="item-name-cell">
+                  <div class="item-title"><span>{{ item.getName() }}</span><div class="basket-tag" ng-if="item.getData().isSubscriptionItem"><div class="basket-tag-text">{{ item.getData().isMonthlySubscriptionItem ? 'Monthly' : 'Yearly' }}</div></div></div>
+                  <div ng-if="item.getData().isSubscriptionItem" class="basket-subscription-text">
+                    <div class="basket-subscription-header">Full access to Value, Flow, Quality:</div>
+                    <div class="basket-subscription-line">Role-based online courses</div>
+                    <div class="basket-subscription-line">Learning modules</div>
+                    <div class="basket-subscription-line">Techniques at a glance</div>
+                    <div class="basket-subscription-header">Quarterly content releases</div>
+                  </div>
                 </td>
-                <td ng-if="!isTrial || !item.getData().trialItem" class="relative-cell">
-                  <div class="pull-right item-price">{{ item.getTotal(cart.getPricingInfo()) | giCurrency:cart.getCurrencySymbol() }}<div ng-click="cart.removeItem($index)" class="remove-icon"></div></div>
+                <td ng-if="!isTrial || !item.getData().trialItem" class="relative-cell item-price-cell">
+                  <div class="item-price">{{ item.getTotal(cart.getPricingInfo()) | giCurrency:cart.getCurrencySymbol() }}</div>
+                  <div ng-click="cart.removeItem($index)" class="remove-text">remove</div>
                 </td>
                 <td ng-if="isTrial && item.getData().trialItem">
                   <div class="item-title">{{ item.getName() }}</div>
@@ -49,7 +56,7 @@
                   <div class="subscription-title">30-Day Free Trial</div>
                 </td>
                 <td ng-if="isTrial && item.getData().trialItem" class="relative-cell">
-                  <div class="pull-right item-price">{{ '0.00' | giCurrency:cart.getCurrencySymbol() }}<div ng-click="cart.removeItem($index)" class="remove-icon"></div>
+                  <div class="item-price">{{ '0.00' | giCurrency:cart.getCurrencySymbol() }}<div ng-click="cart.removeItem($index)" class="remove-icon"></div>
                   </div>
                 </td>
               </tr>
@@ -392,11 +399,11 @@
             <div class="checkout-form-section-title input-adjustment">
               Review & confirm
             </div>
-            <p ng-if="isTrial && subscriptionItem">
+            <p ng-if="isTrial && subscriptionItem && subscriptionItem.trialItem">
               Your free trial begins today and is valid for 30-days. You will be charged <b>{{ subscriptionItem.getTotal(cart.getPricingInfo()) | giCurrency:cart.getCurrencySymbol() }}</b> on <b>{{nextPaymentDate.getDate()}} {{nextPaymentDate.toLocaleString('default', { month: 'long' })}}, {{nextPaymentDate.getFullYear()}}</b> and the subscription will automatically renew each year unless you cancel.
             </p>
-            <p ng-if="!isTrial && subscriptionItem">
-              You will be charged once upon confirmation of your purchase. Your VFQ Membership will be valid until <b>{{nextPaymentDate.getDate()}} {{nextPaymentDate.toLocaleString('default', { month: 'long' })}}, {{nextPaymentDate.getFullYear()}}</b>.
+            <p ng-if="subscriptionItem && (!isTrial || !subscriptionItem.trialItem)">
+              By selecting the {{ subscriptionItem.getData().isMonthlySubscriptionItem ? 'monthly' : 'annual' }} payment plan, you will be charged <b>{{ subscriptionItem.getTotal(cart.getPricingInfo()) | giCurrency:cart.getCurrencySymbol() }}</b> today and your subscription will automatically renew each {{ subscriptionItem.getData().isMonthlySubscriptionItem ? 'month' : 'year' }} unless you cancel.
             </p>
             <p>
               By continuing with this purchase you agree to our <a class="checkout-href" target="_blank" href="/terms-and-conditions">Terms and Conditions</a>.
