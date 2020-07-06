@@ -78,9 +78,10 @@ angular.module('gi.commerce').directive 'giCheckout'
       console.log('cartItems.length')
       for item in $scope.cartItems
         console.dir(item.getData())
-        if item.getData().trialItem
+        if item.getData().isSubscriptionItem
           itemFound = true
           $scope.subscriptionItem = item
+          break
 
       if !itemFound
         $scope.subscriptionItem = undefined
