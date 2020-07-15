@@ -1859,7 +1859,19 @@ angular.module('gi.commerce').provider('giCart', function() {
               if (status === 'requires_action') {
                 return stripeIns.confirmCardPayment(clientSecret).then(function(result) {
                   if (result.error) {
-                    return deferred.reject(result.error);
+                    return $http.put("/api/cancel-subscription").then(function() {
+                      return deferred.reject("The card payment was rejected during confirmation");
+                    }, function(err) {
+                      var subscriptionErrorMessage;
+                      subscriptionErrorMessage = "The card payment was rejected during confirmation and the incomplete subscription could not be cancelled autoamtically. Please get in touch with support via the hubspot chat or email, or do so manually in the My Account page. ";
+                      if (err.data) {
+                        subscriptionErrorMessage += err.data;
+                      }
+                      if (err.msg) {
+                        subscriptionErrorMessage += err.msg;
+                      }
+                      return deferred.reject(subscriptionErrorMessage);
+                    });
                   } else {
                     return deferred.resolve();
                   }
