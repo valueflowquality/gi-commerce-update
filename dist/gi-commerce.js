@@ -1099,6 +1099,49 @@ angular.module('gi.security').directive('giVat', [
   }
 ]);
 
+angular.module('gi.commerce').filter('giCurrency', [
+  '$filter', function($filter) {
+    return function(amount, currencySymbol, fractionSize) {
+      if (angular.isFunction(currencySymbol)) {
+        currencySymbol = currencySymbol();
+      }
+      return $filter('currency')(amount, currencySymbol, fractionSize);
+    };
+  }
+]);
+
+angular.module('gi.commerce').filter('giCurrencyId', [
+  'giCurrency', function(Currency) {
+    return function(currencyId) {
+      var cur, result;
+      result = "N/A";
+      if (currencyId != null) {
+        cur = Currency.getCached(currencyId);
+        if (cur != null) {
+          result = cur.symbol + ' ' + cur.code;
+        }
+      }
+      return result;
+    };
+  }
+]);
+
+angular.module('gi.commerce').filter('giMarketId', [
+  'giMarket', function(Model) {
+    return function(id) {
+      var cur, result;
+      result = "N/A";
+      if (id != null) {
+        cur = Model.getCached(id);
+        if (cur != null) {
+          result = cur.code;
+        }
+      }
+      return result;
+    };
+  }
+]);
+
 angular.module('gi.commerce').factory('Address', [
   'giCrud', function(Crud) {
     return Crud.factory('Addresses');
@@ -1819,8 +1862,23 @@ angular.module('gi.commerce').provider('giCart', function() {
                     return $http.put("/api/cancel-subscription").then(function() {
                       return deferred.reject("The card payment was rejected during confirmation");
                     }, function(err) {
-                      console.log(err);
-                      return deferred.reject("The card payment was rejected during confirmation and the incomplete subscription could not be cancelled autoamtically. Please get in touch with support via the hubspot chat or email, or do so manually in the My Account page.");
+                      var subscriptionErrorMessage, subscriptionErrorMessageError;
+                      console.dir(err);
+                      subscriptionErrorMessage = "The card payment was rejected during confirmation and the incomplete subscription could not be cancelled automatically. Please get in touch with support via the Hubspot chat or email, or cancel so manually in the My Account page.";
+                      subscriptionErrorMessageError = '';
+                      if (err.data) {
+                        subscriptionErrorMessageError = ' Details for the error that should be passed to support, if needed: ' + err.data;
+                      }
+                      if (err.msg) {
+                        subscriptionErrorMessageError = ' Details for the error that should be passed to support, if needed: ' + err.msg;
+                      }
+                      if (err.statusText) {
+                        subscriptionErrorMessageError = ' Details for the error that should be passed to support, if needed: ' + err.statusText;
+                      }
+                      if (subscriptionErrorMessageError) {
+                        subscriptionErrorMessage += subscriptionErrorMessageError;
+                      }
+                      return deferred.reject(subscriptionErrorMessage);
                     });
                   } else {
                     return deferred.resolve();
@@ -2587,49 +2645,6 @@ angular.module('gi.commerce').factory('giProduct', [
       save: save,
       destroy: crudService.destroy,
       forCategory: forCategory
-    };
-  }
-]);
-
-angular.module('gi.commerce').filter('giCurrency', [
-  '$filter', function($filter) {
-    return function(amount, currencySymbol, fractionSize) {
-      if (angular.isFunction(currencySymbol)) {
-        currencySymbol = currencySymbol();
-      }
-      return $filter('currency')(amount, currencySymbol, fractionSize);
-    };
-  }
-]);
-
-angular.module('gi.commerce').filter('giCurrencyId', [
-  'giCurrency', function(Currency) {
-    return function(currencyId) {
-      var cur, result;
-      result = "N/A";
-      if (currencyId != null) {
-        cur = Currency.getCached(currencyId);
-        if (cur != null) {
-          result = cur.symbol + ' ' + cur.code;
-        }
-      }
-      return result;
-    };
-  }
-]);
-
-angular.module('gi.commerce').filter('giMarketId', [
-  'giMarket', function(Model) {
-    return function(id) {
-      var cur, result;
-      result = "N/A";
-      if (id != null) {
-        cur = Model.getCached(id);
-        if (cur != null) {
-          result = cur.code;
-        }
-      }
-      return result;
     };
   }
 ]);
