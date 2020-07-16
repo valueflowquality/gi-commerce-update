@@ -523,7 +523,7 @@ angular.module('gi.commerce').provider 'giCart', () ->
                       console.dir err
 
                       subscriptionErrorMessage = "The card payment was rejected during confirmation and the incomplete subscription could not be cancelled automatically.
-                        Please get in touch with support via the Hubspot chat or email, or cancel so manually in the My Account page."
+                        Please get in touch with support via the chat or email, or cancel so manually in the My Account page."
 
                       subscriptionErrorMessageError = ''
 
@@ -532,6 +532,9 @@ angular.module('gi.commerce').provider 'giCart', () ->
 
                       if err.msg
                         subscriptionErrorMessageError = ' Details for the error that should be passed to support, if needed: ' + err.msg
+
+                      if err.message
+                        subscriptionErrorMessageError = ' Details for the error that should be passed to support, if needed: ' + err.message
 
                       if err.statusText
                         subscriptionErrorMessageError = ' Details for the error that should be passed to support, if needed: ' + err.statusText
