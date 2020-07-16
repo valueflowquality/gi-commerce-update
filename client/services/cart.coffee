@@ -520,9 +520,26 @@ angular.module('gi.commerce').provider 'giCart', () ->
                   $http.put("/api/cancel-subscription").then () ->
                     deferred.reject "The card payment was rejected during confirmation"
                   , (err) ->
-                    console.log err
-                    deferred.reject "The card payment was rejected during confirmation and the incomplete subscription could not be cancelled autoamtically.
-                      Please get in touch with support via the hubspot chat or email, or do so manually in the My Account page."
+                      console.dir err
+
+                      subscriptionErrorMessage = "The card payment was rejected during confirmation and the incomplete subscription could not be cancelled automatically.
+                        Please get in touch with support via the Hubspot chat or email, or cancel so manually in the My Account page."
+
+                      subscriptionErrorMessageError = ''
+
+                      if err.data
+                        subscriptionErrorMessageError = ' Details for the error that should be passed to support, if needed: ' + err.data
+
+                      if err.msg
+                        subscriptionErrorMessageError = ' Details for the error that should be passed to support, if needed: ' + err.msg
+
+                      if err.statusText
+                        subscriptionErrorMessageError = ' Details for the error that should be passed to support, if needed: ' + err.statusText
+
+                      if subscriptionErrorMessageError
+                        subscriptionErrorMessage += subscriptionErrorMessageError
+
+                      deferred.reject subscriptionErrorMessage
                 else
                   deferred.resolve()
               )
