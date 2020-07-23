@@ -270,6 +270,24 @@
                         </div>
                       </div>
                   </div>
+                </div><!--
+                --><div class="checkout-input-wrapper">
+                  <div class="form-group">
+                    <div data-hj-suppress="" class="input-container">
+                      <input class="form-control"
+                      type="text"
+                      tabindex="1"
+                      maxlength="50"
+                      name="couponCode"
+                      ng-model="cart.couponCode"
+                      placeholder="Coupon Code" coupon-valid/><!--
+                      --><div class="input-validity-indicator">
+                        <div class="validity-icon"
+                        ng-class="{'has-error': isPropertyValidationError('couponCode'), 'has-success': isPropertyValidationSuccess('couponCode')}">
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

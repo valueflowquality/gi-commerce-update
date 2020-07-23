@@ -107,7 +107,10 @@ angular.module('gi.commerce').directive 'giCheckout'
         $scope.errorMessage = data;
 
         if data.message?
-          $scope.errorMessage = data.message;
+          if data.message.raw?.message?
+            $scope.errorMessage =  data.message.raw.message;
+          else
+            $scope.errorMessage = data.message;
 
         if data.raw?.message?
           $scope.errorMessage = data.raw.message;

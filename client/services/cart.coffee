@@ -15,6 +15,7 @@ angular.module('gi.commerce').provider 'giCart', () ->
       taxRate: cart.tax
       taxInclusive: cart.taxInclusive
       taxExempt: cart.taxExempt
+      couponDiscount: cart.couponDiscount
 
     getItemById = (itemId) ->
       build = null
@@ -120,7 +121,7 @@ angular.module('gi.commerce').provider 'giCart', () ->
 
       deferred.promise
 
-    #Below are the publicly exported functions
+    # Below are the publicly exported functions
     c =
       init: init
 
@@ -495,6 +496,7 @@ angular.module('gi.commerce').provider 'giCart', () ->
           billing: that.billingAddress
           customer: that.customer
           currency: that.getCurrencyCode().toLowerCase()
+          couponCode: that.couponCode
           tax:
             rate: cart.tax
             name: cart.taxName
