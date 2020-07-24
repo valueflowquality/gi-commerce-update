@@ -11,13 +11,24 @@ angular.module('gi.security').directive 'couponValid'
         if (not viewValue?) or viewValue is ""
           deferred.resolve()
         else
-          $http.get('/api/coupon-info?couponCode=' + viewValue).success (couponInfo) ->
+          assets = Cart.getItems()
+          if !assets?.length > 0
+            deferred.reject err
+            return
+
+          itemParams = ""
+
+          for asset in assets
+            if asset._data?._id
+              itemParams += "&assets[]=" + asset._data._id
+
+          $http.get('/api/coupon-info?couponCode=' + viewValue + itemParams).success (couponInfo) ->
             if couponInfo?.valid
-              console.log "couponInfo"
-              console.dir couponInfo
               if couponInfo.percent_off
                 Cart.setCouponDiscount(couponInfo.percent_off)
-              deferred.resolve couponInfo
+                deferred.resolve couponInfo
+              else
+                deferred.reject()
             else
               Cart.setCouponDiscount(0)
               deferred.reject()
