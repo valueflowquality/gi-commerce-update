@@ -12,11 +12,17 @@ angular.module('gi.security').directive 'couponValid'
           deferred.resolve()
         else
           $http.get('/api/coupon-info?couponCode=' + viewValue).success (couponInfo) ->
-            if couponInfo?
+            if couponInfo?.valid
               console.log "couponInfo"
               console.dir couponInfo
-            deferred.resolve couponInfo
+              if couponInfo.percent_off
+                Cart.setCouponDiscount(couponInfo.percent_off)
+              deferred.resolve couponInfo
+            else
+              Cart.setCouponDiscount(0)
+              deferred.reject()
           .error (err) ->
+            Cart.setCouponDiscount(0)
             deferred.reject err
 
         deferred.promise

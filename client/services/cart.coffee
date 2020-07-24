@@ -65,6 +65,7 @@ angular.module('gi.commerce').provider 'giCart', () ->
         taxInclusive: true
         taxApplicable: false
         discountPercent: 0
+        couponDiscount: 0
         checkoutFormValid: false
         cardElementValid: undefined
         business: false
@@ -223,6 +224,9 @@ angular.module('gi.commerce').provider 'giCart', () ->
 
       setCardElementValidity: (valid) ->
         cart.cardElementValid = valid
+
+      setCouponDiscount: (discount) ->
+        cart.couponDiscount = discount
 
       isStageInvalid: (stage) ->
         if cart.validStages[stage]?

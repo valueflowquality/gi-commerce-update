@@ -37,7 +37,8 @@ angular.module('gi.commerce').factory 'giCartItem'
     marketCode = priceInfo.marketCode
 
     if @_priceList?.prices?[marketCode]? && !(priceInfo.isTrial && @_data.trialItem)
-      @_priceList.prices[marketCode]
+      if !priceInfo.couponDiscount
+        @_priceList.prices[marketCode]
     else
       0
 
