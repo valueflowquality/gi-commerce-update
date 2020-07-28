@@ -1,6 +1,6 @@
 {
   "name": "gi-commerce-updated",
-  "version": "0.8.34",
+  "version": "0.8.35",
   "main": "./dist/gi.commerce.js",
   "ignore": [
     "/client",
