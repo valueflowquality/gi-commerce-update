@@ -33,11 +33,14 @@ angular.module('gi.commerce').factory 'giCartItem'
     else
       console.error('A Price List must be provided')
 
-  item.prototype.getPrice = (priceInfo) ->
+  item.prototype.getPrice = (priceInfo, ignoreDiscount) ->
     marketCode = priceInfo.marketCode
 
     if @_priceList?.prices?[marketCode]? && !(priceInfo.isTrial && @_data.trialItem)
-      @_priceList.prices[marketCode]
+      if !priceInfo.coupon?.valid || !priceInfo.coupon.percent_off || ignoreDiscount
+        @_priceList.prices[marketCode]
+      else
+        @_priceList.prices[marketCode] / 100 * (100 - priceInfo.coupon.percent_off)
     else
       0
 
@@ -72,16 +75,16 @@ angular.module('gi.commerce').factory 'giCartItem'
       console.info('This item has no data')
       return
 
-  item.prototype.getSubTotal = (priceInfo) ->
-    itemPrice = @getPrice(priceInfo)
+  item.prototype.getSubTotal = (priceInfo, ignoreDiscount) ->
+    itemPrice = @getPrice(priceInfo, ignoreDiscount)
     if priceInfo.taxRate > 0 and priceInfo.taxInclusive
       itemPrice = itemPrice / (1 + (priceInfo.taxRate / 100))
 
     +(@getQuantity() * itemPrice).toFixed(2)
 
-  item.prototype.getTaxTotal = (priceInfo) ->
+  item.prototype.getTaxTotal = (priceInfo, ignoreDiscount) ->
     if priceInfo.taxRate > 0 and not (priceInfo.taxExempt)
-      itemPrice = @getPrice(priceInfo)
+      itemPrice = @getPrice(priceInfo, ignoreDiscount)
       taxTotal = 0
       if priceInfo.taxInclusive
         taxTotal = itemPrice - (itemPrice / (1 + (priceInfo.taxRate / 100)))
@@ -92,8 +95,8 @@ angular.module('gi.commerce').factory 'giCartItem'
     else
       0
 
-  item.prototype.getTotal =  (priceInfo) ->
-    @getSubTotal(priceInfo) + @getTaxTotal(priceInfo)
+  item.prototype.getTotal =  (priceInfo, ignoreDiscount) ->
+    @getSubTotal(priceInfo, ignoreDiscount) + @getTaxTotal(priceInfo, ignoreDiscount)
 
   item.prototype.needsShipping = () ->
     @_data.physical
