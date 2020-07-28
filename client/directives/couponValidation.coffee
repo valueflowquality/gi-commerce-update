@@ -9,6 +9,7 @@ angular.module('gi.security').directive 'couponValid'
       controller.$asyncValidators.couponValid = (modelValue, viewValue) ->
         deferred = $q.defer()
         if (not viewValue?) or viewValue is ""
+          Cart.setDefaultCoupon()
           deferred.resolve()
         else
           assets = Cart.getItems()
@@ -22,18 +23,15 @@ angular.module('gi.security').directive 'couponValid'
             if asset._data?._id
               itemParams += "&assets[]=" + asset._data._id
 
-          $http.get('/api/coupon-info?couponCode=' + viewValue + itemParams).success (couponInfo) ->
-            if couponInfo?.valid
-              if couponInfo.percent_off
-                Cart.setCouponDiscount(couponInfo.percent_off)
-                deferred.resolve couponInfo
-              else
-                deferred.reject()
+          $http.get('/api/coupon-info?couponCode=' + viewValue + itemParams).success (coupon) ->
+            if coupon?.valid
+              Cart.setCoupon(coupon)
+              deferred.resolve coupon
             else
-              Cart.setCouponDiscount(0)
+              Cart.setDefaultCoupon()
               deferred.reject()
           .error (err) ->
-            Cart.setCouponDiscount(0)
+            Cart.setDefaultCoupon()
             deferred.reject err
 
         deferred.promise

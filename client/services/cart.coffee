@@ -15,7 +15,7 @@ angular.module('gi.commerce').provider 'giCart', () ->
       taxRate: cart.tax
       taxInclusive: cart.taxInclusive
       taxExempt: cart.taxExempt
-      couponDiscount: cart.couponDiscount
+      coupon: cart.coupon
 
     getItemById = (itemId) ->
       build = null
@@ -24,21 +24,21 @@ angular.module('gi.commerce').provider 'giCart', () ->
           build = item
       build
 
-    getSubTotal = (isTrial) ->
+    getSubTotal = (isTrial, ignoreDiscount) ->
       subTotal = 0
       priceInfo = getPricingInfo()
       priceInfo.isTrial = isTrial
       angular.forEach cart.items, (item) ->
-        subTotal += item.getSubTotal(priceInfo)
+        subTotal += item.getSubTotal(priceInfo, ignoreDiscount)
 
       +(subTotal).toFixed(2)
 
-    getTaxTotal = (isTrial) ->
+    getTaxTotal = (isTrial, ignoreDiscount) ->
       taxTotal = 0
       priceInfo = getPricingInfo()
       priceInfo.isTrial = isTrial
       angular.forEach cart.items, (item) ->
-        taxTotal += item.getTaxTotal(priceInfo)
+        taxTotal += item.getTaxTotal(priceInfo, ignoreDiscount)
       taxSavings = taxTotal  *  (cart.discountPercent / 100)
       taxTotal = taxTotal - taxSavings
       +(taxTotal).toFixed(2)
@@ -65,7 +65,9 @@ angular.module('gi.commerce').provider 'giCart', () ->
         taxInclusive: true
         taxApplicable: false
         discountPercent: 0
-        couponDiscount: 0
+        coupon:
+          percent_off: 0
+          valid: false
         checkoutFormValid: false
         cardElementValid: undefined
         business: false
@@ -225,8 +227,20 @@ angular.module('gi.commerce').provider 'giCart', () ->
       setCardElementValidity: (valid) ->
         cart.cardElementValid = valid
 
-      setCouponDiscount: (discount) ->
-        cart.couponDiscount = discount
+      setCoupon: (coupon) ->
+        cart.coupon = coupon
+
+      setDefaultCoupon: () ->
+        cart.coupon = { percent_off: 0, valid: false }
+
+      isCouponValid: () ->
+        cart.coupon.valid
+
+      getCouponDuration: () ->
+        cart.coupon.duration
+
+      getCouponDurationMonths: () ->
+        cart.coupon.duration_in_months
 
       isStageInvalid: (stage) ->
         if cart.validStages[stage]?
@@ -307,10 +321,10 @@ angular.module('gi.commerce').provider 'giCart', () ->
 
         result
 
-      totalCost:  (isTrial) ->
+      totalCost:  (isTrial, ignoreDiscount) ->
         percentage = (cart.discountPercent / 100)
-        subTot = getSubTotal(isTrial)
-        tot = getSubTotal(isTrial) + getTaxTotal(isTrial)
+        subTot = getSubTotal(isTrial, ignoreDiscount)
+        tot = getSubTotal(isTrial, ignoreDiscount) + getTaxTotal(isTrial, ignoreDiscount)
         cart.savings = (percentage * subTot)
         tot - (percentage * subTot)
 
