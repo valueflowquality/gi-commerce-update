@@ -41,24 +41,30 @@
               <tr class="checkout-subscription" ng-repeat="item in cartItems track by $index" ng-if="cart.isCouponValid() && cart.getCouponDuration() === 'once'">
                 <th colspan="2">
                   <div class="subscription-container">
-                    <div class="subscription-container-title">The coupon discount is applied to the first subscription period</div>
-                    <div class="subscription-container-description">The next charge will be {{item.getTotal(cart.getPricingInfo(), true) | giCurrency:cart.getCurrencySymbol()}}</div>
+                    <div class="subscription-container-title">The discount has been applied to your first membership payment</div>
+                    <div class="subscription-container-description">Your next charge will be {{item.getTotal(cart.getPricingInfo(), true) | giCurrency:cart.getCurrencySymbol()}}</div>
                   </div>
                 </th>
               </tr>
               <tr class="checkout-subscription" ng-repeat="item in cartItems track by $index" ng-if="cart.isCouponValid() && cart.getCouponDuration() === 'forever'">
                 <th colspan="2">
                   <div class="subscription-container">
-                    <div class="subscription-container-title">The coupon discount is applied for all subscription charges</div>
-                    <div class="subscription-container-description">The next charge will be {{item.getTotal(cart.getPricingInfo()) | giCurrency:cart.getCurrencySymbol()}}</div>
+                    <div class="subscription-container-title">The discount has been applied to all your upcoming membership payments</div>
+                    <div class="subscription-container-description">Your next charge will be {{item.getTotal(cart.getPricingInfo()) | giCurrency:cart.getCurrencySymbol()}}</div>
                   </div>
                 </th>
               </tr>
               <tr class="checkout-subscription" ng-repeat="item in cartItems track by $index" ng-if="cart.isCouponValid() && cart.getCouponDuration() === 'repeating'">
-                <th colspan="2">
+                <th colspan="2" ng-if="item.getData().isMonthlySubscriptionItem">
                   <div class="subscription-container">
-                    <div class="subscription-container-title">The coupon discount is applied for the next {{ cart.getCouponDurationMonths() }} months</div>
-                    <div class="subscription-container-description">The next charge after {{ cart.getCouponDurationMonths() }} months will be {{item.getTotal(cart.getPricingInfo(), true) | giCurrency:cart.getCurrencySymbol()}}</div>
+                    <div class="subscription-container-title">The discount has been applied to your first {{ cart.getCouponDurationMonths() }} membership payments</div>
+                    <div class="subscription-container-description">After that, your monthly charge will be {{item.getTotal(cart.getPricingInfo(), true) | giCurrency:cart.getCurrencySymbol()}}</div>
+                  </div>
+                </th>
+                <th colspan="2" ng-if="!item.getData().isMonthlySubscriptionItem">
+                  <div class="subscription-container">
+                    <div class="subscription-container-title">The discount has been applied to your first {{ cart.getCouponDurationMonths() / 12 | roundUp }} membership payments</div>
+                    <div class="subscription-container-description">After that, your annual charge will be {{item.getTotal(cart.getPricingInfo(), true) | giCurrency:cart.getCurrencySymbol()}}</div>
                   </div>
                 </th>
               </tr>
@@ -244,7 +250,7 @@
                   <label ng-click="cart.business = !cart.business" class="">Buying for a company?</label>
                 </div>
               </div>
-              <div class="invoice-request">Need an invoice? Request one
+              <div class="invoice-request">Prefer to pay by invoice? Request one
                 <a
                 class="checkout-href"
                 href="mailto: education@valueflowquality.com?subject=Invoice request for VFQ Membership&body=Please send us the information below%0D%0A%0D%0A%0D%0ACompany Name:%0D%0A%0D%0ACompany address:%0D%0A%0D%0ACompany VAT Number:%0D%0A%0D%0ANumber of memberships to be purchased:%0D%0A%0D%0AName and email address of new members:%0D%0A%0D%0A">
@@ -309,7 +315,7 @@
                       maxlength="50"
                       name="couponCode"
                       ng-model="cart.couponCode"
-                      placeholder="Coupon Code" coupon-valid/><!--
+                      placeholder="Promotional Code" coupon-valid/><!--
                       --><div class="input-validity-indicator">
                         <div class="validity-icon"
                         ng-class="{'has-error': isPropertyValidationError('couponCode'), 'has-success': isPropertyValidationSuccess('couponCode')}">
@@ -447,10 +453,10 @@
               Review & confirm
             </div>
             <p ng-if="isTrial && subscriptionItem && subscriptionItem.trialItem">
-              Your free trial begins today and is valid for 30-days. You will be charged <b>{{ subscriptionItem.getTotal(cart.getPricingInfo()) | giCurrency:cart.getCurrencySymbol() }}</b> on <b>{{nextPaymentDate.getDate()}} {{nextPaymentDate.toLocaleString('default', { month: 'long' })}}, {{nextPaymentDate.getFullYear()}}</b> and the subscription will automatically renew each year unless you cancel.
+              Your free trial begins today and is valid for 30-days. You will be charged <b>{{ subscriptionItem.getTotal(cart.getPricingInfo()) | giCurrency:cart.getCurrencySymbol() }}</b> on <b>{{nextPaymentDate.getDate()}} {{nextPaymentDate.toLocaleString('default', { month: 'long' })}}, {{nextPaymentDate.getFullYear()}}</b> and the membership will automatically renew each year unless you cancel.
             </p>
             <p ng-if="subscriptionItem && (!isTrial || !subscriptionItem.trialItem)">
-              By selecting the {{ subscriptionItem.getData().isMonthlySubscriptionItem ? 'monthly' : 'annual' }} payment plan, you will be charged <b>{{ subscriptionItem.getTotal(cart.getPricingInfo()) | giCurrency:cart.getCurrencySymbol() }}</b> today and your subscription will automatically renew each {{ subscriptionItem.getData().isMonthlySubscriptionItem ? 'month' : 'year' }} unless you cancel.
+              By selecting the {{ subscriptionItem.getData().isMonthlySubscriptionItem ? 'monthly' : 'annual' }} payment plan, you will be charged <b>{{ subscriptionItem.getTotal(cart.getPricingInfo()) | giCurrency:cart.getCurrencySymbol() }}</b> today and your membership will automatically renew each {{ subscriptionItem.getData().isMonthlySubscriptionItem ? 'month' : 'year' }} unless you cancel.
             </p>
             <p>
               By continuing with this purchase you agree to our <a class="checkout-href" target="_blank" href="/terms-and-conditions">Terms and Conditions</a>.
