@@ -67,6 +67,7 @@ angular.module('gi.commerce').provider 'giCart', () ->
         discountPercent: 0
         coupon:
           percent_off: 0
+          amount_off: 0
           valid: false
         checkoutFormValid: false
         cardElementValid: undefined
@@ -231,7 +232,7 @@ angular.module('gi.commerce').provider 'giCart', () ->
         cart.coupon = coupon
 
       setDefaultCoupon: () ->
-        cart.coupon = { percent_off: 0, valid: false }
+        cart.coupon = { percent_off: 0, amount_off: 0, valid: false }
 
       isCouponValid: () ->
         cart.coupon.valid

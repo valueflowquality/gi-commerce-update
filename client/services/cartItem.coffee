@@ -37,10 +37,15 @@ angular.module('gi.commerce').factory 'giCartItem'
     marketCode = priceInfo.marketCode
 
     if @_priceList?.prices?[marketCode]? && !(priceInfo.isTrial && @_data.trialItem)
-      if !priceInfo.coupon?.valid || !priceInfo.coupon.percent_off || ignoreDiscount
+      if !priceInfo.coupon?.valid || ignoreDiscount
         @_priceList.prices[marketCode]
       else
-        @_priceList.prices[marketCode] / 100 * (100 - priceInfo.coupon.percent_off)
+        if priceInfo.coupon.percent_off
+          @_priceList.prices[marketCode] / 100 * (100 - priceInfo.coupon.percent_off)
+        else
+          if priceInfo.coupon.amount_off
+            @_priceList.prices[marketCode] - (priceInfo.coupon.amount_off / 100)
+
     else
       0
 
