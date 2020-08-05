@@ -41,7 +41,7 @@ angular.module('gi.commerce').factory 'giCartItem'
         @_priceList.prices[marketCode]
       else
         if priceInfo.coupon.percent_off
-          @_priceList.prices[marketCode] / 100 * (100 - priceInfo.coupon.percent_off)
+          @_priceList.prices[marketCode] - (Math.round((@_priceList.prices[marketCode] / 100 * priceInfo.coupon.percent_off) * 100) / 100)
         else
           if priceInfo.coupon.amount_off
             @_priceList.prices[marketCode] - (priceInfo.coupon.amount_off / 100)

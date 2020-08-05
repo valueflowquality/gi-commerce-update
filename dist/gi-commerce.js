@@ -2217,7 +2217,7 @@ angular.module('gi.commerce').factory('giCartItem', [
           return this._priceList.prices[marketCode];
         } else {
           if (priceInfo.coupon.percent_off) {
-            return this._priceList.prices[marketCode] / 100 * (100 - priceInfo.coupon.percent_off);
+            return this._priceList.prices[marketCode] - (Math.round((this._priceList.prices[marketCode] / 100 * priceInfo.coupon.percent_off) * 100) / 100);
           } else {
             if (priceInfo.coupon.amount_off) {
               return this._priceList.prices[marketCode] - (priceInfo.coupon.amount_off / 100);
