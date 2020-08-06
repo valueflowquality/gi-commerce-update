@@ -37,14 +37,15 @@ angular.module('gi.commerce').factory 'giCartItem'
     marketCode = priceInfo.marketCode
 
     if @_priceList?.prices?[marketCode]? && !(priceInfo.isTrial && @_data.trialItem)
+      price = BigNumber(@_priceList.prices[marketCode])
       if !priceInfo.coupon?.valid || ignoreDiscount
-        @_priceList.prices[marketCode]
+        price
       else
         if priceInfo.coupon.percent_off
-          @_priceList.prices[marketCode] - (Math.round((@_priceList.prices[marketCode] / 100 * priceInfo.coupon.percent_off) * 100) / 100)
+          price.minus(price.times(priceInfo.coupon.percent_off / 100).decimalPlaces(2))
         else
           if priceInfo.coupon.amount_off
-            @_priceList.prices[marketCode] - (priceInfo.coupon.amount_off / 100)
+            price.minus(priceInfo.coupon.amount_off / 100)
 
     else
       0
@@ -83,25 +84,32 @@ angular.module('gi.commerce').factory 'giCartItem'
   item.prototype.getSubTotal = (priceInfo, ignoreDiscount) ->
     itemPrice = @getPrice(priceInfo, ignoreDiscount)
     if priceInfo.taxRate > 0 and priceInfo.taxInclusive
-      itemPrice = itemPrice / (1 + (priceInfo.taxRate / 100))
+      itemPrice = itemPrice.div(1 + (priceInfo.taxRate / 100))
 
-    +(@getQuantity() * itemPrice).toFixed(2)
+    +itemPrice.times(@getQuantity()).toFixed(2)
 
   item.prototype.getTaxTotal = (priceInfo, ignoreDiscount) ->
     if priceInfo.taxRate > 0 and not (priceInfo.taxExempt)
       itemPrice = @getPrice(priceInfo, ignoreDiscount)
       taxTotal = 0
       if priceInfo.taxInclusive
-        taxTotal = itemPrice - (itemPrice / (1 + (priceInfo.taxRate / 100)))
+        taxTotal = itemPrice.minus(itemPrice.div(1 + (priceInfo.taxRate / 100)))
       else
-        taxTotal = itemPrice * (priceInfo.taxRate / 100)
+        taxTotal = itemPrice.times(priceInfo.taxRate / 100)
 
-      +(@getQuantity() * taxTotal).toFixed(2)
+      +taxTotal.times(@getQuantity()).toFixed(2)
     else
       0
 
   item.prototype.getTotal =  (priceInfo, ignoreDiscount) ->
-    @getSubTotal(priceInfo, ignoreDiscount) + @getTaxTotal(priceInfo, ignoreDiscount)
+    itemPrice = @getPrice(priceInfo, ignoreDiscount)
+    if priceInfo.taxRate > 0
+      if priceInfo.taxInclusive
+        if priceInfo.taxExempt
+          itemPrice = itemPrice.div(1 + (priceInfo.taxRate / 100))
+      else
+        itemPrice = itemPrice.plus(itemPrice.times(priceInfo.taxRate / 100))
+    +itemPrice.times(@getQuantity()).toFixed(2)
 
   item.prototype.needsShipping = () ->
     @_data.physical

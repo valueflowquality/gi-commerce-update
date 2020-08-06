@@ -1699,12 +1699,14 @@ angular.module('gi.commerce').provider('giCart', function() {
           return result;
         },
         totalCost: function(isTrial, ignoreDiscount) {
-          var percentage, subTot, tot;
-          percentage = cart.discountPercent / 100;
-          subTot = getSubTotal(isTrial, ignoreDiscount);
-          tot = getSubTotal(isTrial, ignoreDiscount) + getTaxTotal(isTrial, ignoreDiscount);
-          cart.savings = percentage * subTot;
-          return tot - (percentage * subTot);
+          var priceInfo, total;
+          total = BigNumber(0);
+          priceInfo = getPricingInfo();
+          priceInfo.isTrial = isTrial;
+          angular.forEach(cart.items, function(item) {
+            return total = total.plus(item.getTotal(priceInfo, ignoreDiscount));
+          });
+          return +total.toFixed(2);
         },
         discount: function() {
           return cart.savings;
@@ -2210,17 +2212,18 @@ angular.module('gi.commerce').factory('giCartItem', [
       }
     };
     item.prototype.getPrice = function(priceInfo, ignoreDiscount) {
-      var marketCode, ref, ref1, ref2;
+      var marketCode, price, ref, ref1, ref2;
       marketCode = priceInfo.marketCode;
       if ((((ref = this._priceList) != null ? (ref1 = ref.prices) != null ? ref1[marketCode] : void 0 : void 0) != null) && !(priceInfo.isTrial && this._data.trialItem)) {
+        price = BigNumber(this._priceList.prices[marketCode]);
         if (!((ref2 = priceInfo.coupon) != null ? ref2.valid : void 0) || ignoreDiscount) {
-          return this._priceList.prices[marketCode];
+          return price;
         } else {
           if (priceInfo.coupon.percent_off) {
-            return this._priceList.prices[marketCode] - (Math.round((this._priceList.prices[marketCode] / 100 * priceInfo.coupon.percent_off) * 100) / 100);
+            return price.minus(price.times(priceInfo.coupon.percent_off / 100).decimalPlaces(2));
           } else {
             if (priceInfo.coupon.amount_off) {
-              return this._priceList.prices[marketCode] - (priceInfo.coupon.amount_off / 100);
+              return price.minus(priceInfo.coupon.amount_off / 100);
             }
           }
         }
@@ -2264,9 +2267,9 @@ angular.module('gi.commerce').factory('giCartItem', [
       var itemPrice;
       itemPrice = this.getPrice(priceInfo, ignoreDiscount);
       if (priceInfo.taxRate > 0 && priceInfo.taxInclusive) {
-        itemPrice = itemPrice / (1 + (priceInfo.taxRate / 100));
+        itemPrice = itemPrice.div(1 + (priceInfo.taxRate / 100));
       }
-      return +(this.getQuantity() * itemPrice).toFixed(2);
+      return +itemPrice.times(this.getQuantity()).toFixed(2);
     };
     item.prototype.getTaxTotal = function(priceInfo, ignoreDiscount) {
       var itemPrice, taxTotal;
@@ -2274,17 +2277,28 @@ angular.module('gi.commerce').factory('giCartItem', [
         itemPrice = this.getPrice(priceInfo, ignoreDiscount);
         taxTotal = 0;
         if (priceInfo.taxInclusive) {
-          taxTotal = itemPrice - (itemPrice / (1 + (priceInfo.taxRate / 100)));
+          taxTotal = itemPrice.minus(itemPrice.div(1 + (priceInfo.taxRate / 100)));
         } else {
-          taxTotal = itemPrice * (priceInfo.taxRate / 100);
+          taxTotal = itemPrice.times(priceInfo.taxRate / 100);
         }
-        return +(this.getQuantity() * taxTotal).toFixed(2);
+        return +taxTotal.times(this.getQuantity()).toFixed(2);
       } else {
         return 0;
       }
     };
     item.prototype.getTotal = function(priceInfo, ignoreDiscount) {
-      return this.getSubTotal(priceInfo, ignoreDiscount) + this.getTaxTotal(priceInfo, ignoreDiscount);
+      var itemPrice;
+      itemPrice = this.getPrice(priceInfo, ignoreDiscount);
+      if (priceInfo.taxRate > 0) {
+        if (priceInfo.taxInclusive) {
+          if (priceInfo.taxExempt) {
+            itemPrice = itemPrice.div(1 + (priceInfo.taxRate / 100));
+          }
+        } else {
+          itemPrice = itemPrice.plus(itemPrice.times(priceInfo.taxRate / 100));
+        }
+      }
+      return +itemPrice.times(this.getQuantity()).toFixed(2);
     };
     item.prototype.needsShipping = function() {
       return this._data.physical;
