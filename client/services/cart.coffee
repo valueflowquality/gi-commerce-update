@@ -323,11 +323,12 @@ angular.module('gi.commerce').provider 'giCart', () ->
         result
 
       totalCost:  (isTrial, ignoreDiscount) ->
-        percentage = (cart.discountPercent / 100)
-        subTot = getSubTotal(isTrial, ignoreDiscount)
-        tot = getSubTotal(isTrial, ignoreDiscount) + getTaxTotal(isTrial, ignoreDiscount)
-        cart.savings = (percentage * subTot)
-        tot - (percentage * subTot)
+        total = BigNumber(0)
+        priceInfo = getPricingInfo()
+        priceInfo.isTrial = isTrial
+        angular.forEach cart.items, (item) ->
+          total = total.plus(item.getTotal(priceInfo, ignoreDiscount))
+        +total.toFixed(2)
 
       discount: () ->
         cart.savings
