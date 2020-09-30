@@ -424,7 +424,11 @@ angular.module('gi.commerce').directive('giCheckout', [
               break;
             }
           }
-          return wrapSpinner(purchaseItems());
+          if (subscriptionFound) {
+            return wrapSpinner(invokeCartPayment());
+          } else {
+            return wrapSpinner(purchaseItems());
+          }
         };
         $scope.$on('giCart:paymentFailed', function(e, data) {
           var ref, ref1;
@@ -1879,7 +1883,7 @@ angular.module('gi.commerce').provider('giCart', function() {
                   step: 4,
                   option: 'Transaction Complete'
                 }, cart.items);
-                that.nextStage();
+                that.empty();
                 return deferred.resolve();
               } else {
                 if (result.error) {
@@ -1906,12 +1910,18 @@ angular.module('gi.commerce').provider('giCart', function() {
             }).then(function(result) {
               if (result.paymentMethod) {
                 return that.submitSubscriptionRequest(result.paymentMethod).then(function(paymentMethod) {
+                  var assetIds, i, item, len, ref;
                   $rootScope.$broadcast('giCart:paymentCompleted');
                   giEcommerceAnalytics.sendTransaction({
                     step: 4,
                     option: 'Transaction Complete'
                   }, cart.items);
-                  return that.waitForAsset().then(function() {
+                  ref = cart.items;
+                  for (i = 0, len = ref.length; i < len; i++) {
+                    item = ref[i];
+                    assetIds = [item._data._id];
+                  }
+                  return that.waitForAssets(assetIds).then(function() {
                     that.empty();
                     that.redirectUser();
                     return deferred.resolve();
@@ -1976,92 +1986,95 @@ angular.module('gi.commerce').provider('giCart', function() {
             subscriptionRequest.vat = that.company.VAT;
             subscriptionRequest.company = that.company.name;
           }
-          $http.post('/api/createSubscription', subscriptionRequest).success(function(response) {
+          $http.post('/api/createSubscription', subscriptionRequest).success(function(subscription) {
             var clientSecret, latestInvoice, paymentIntent, status;
-            if ((response != null ? response.paymentMethod : void 0) === "intent" && response.clientSecret) {
-              cart.client_secret = response.clientSecret;
-              return payNow().then(function() {
-                return deferred.resolve();
-              }, function(err) {
-                return deferred.reject(err);
-              });
-            } else {
-              if ((response != null ? response.paymentMethod : void 0) === "subscription" && response.subscription) {
-                latestInvoice = response.subscription.latest_invoice;
-                paymentIntent = latestInvoice.payment_intent;
-                if (paymentIntent) {
-                  clientSecret = paymentIntent.client_secret;
-                  status = paymentIntent.status;
-                  if (status === 'requires_action') {
-                    return stripeIns.confirmCardPayment(clientSecret).then(function(result) {
-                      if (result.error) {
-                        return $http.put("/api/cancel-subscription").then(function() {
-                          return deferred.reject("The card payment was rejected during confirmation");
-                        }, function(err) {
-                          var subscriptionErrorMessage, subscriptionErrorMessageError;
-                          console.dir(err);
-                          subscriptionErrorMessage = "The card payment was rejected during confirmation and the incomplete subscription could not be cancelled automatically. Please get in touch with support via the chat or email, or cancel so manually in the My Account page.";
-                          subscriptionErrorMessageError = '';
-                          if (err.data) {
-                            subscriptionErrorMessageError = ' Details for the error that should be passed to support, if needed: ' + err.data;
-                          }
-                          if (err.msg) {
-                            subscriptionErrorMessageError = ' Details for the error that should be passed to support, if needed: ' + err.msg;
-                          }
-                          if (err.message) {
-                            subscriptionErrorMessageError = ' Details for the error that should be passed to support, if needed: ' + err.message;
-                          }
-                          if (err.statusText) {
-                            subscriptionErrorMessageError = ' Details for the error that should be passed to support, if needed: ' + err.statusText;
-                          }
-                          if (subscriptionErrorMessageError) {
-                            subscriptionErrorMessage += subscriptionErrorMessageError;
-                          }
-                          return deferred.reject(subscriptionErrorMessage);
-                        });
-                      } else {
-                        return deferred.resolve();
+            latestInvoice = subscription.latest_invoice;
+            paymentIntent = latestInvoice.payment_intent;
+            if (paymentIntent) {
+              clientSecret = paymentIntent.client_secret;
+              status = paymentIntent.status;
+              if (status === 'requires_action') {
+                return stripeIns.confirmCardPayment(clientSecret).then(function(result) {
+                  if (result.error) {
+                    return $http.put("/api/cancel-subscription").then(function() {
+                      return deferred.reject("The card payment was rejected during confirmation");
+                    }, function(err) {
+                      var subscriptionErrorMessage, subscriptionErrorMessageError;
+                      console.dir(err);
+                      subscriptionErrorMessage = "The card payment was rejected during confirmation and the incomplete subscription could not be cancelled automatically. Please get in touch with support via the chat or email, or cancel so manually in the My Account page.";
+                      subscriptionErrorMessageError = '';
+                      if (err.data) {
+                        subscriptionErrorMessageError = ' Details for the error that should be passed to support, if needed: ' + err.data;
                       }
+                      if (err.msg) {
+                        subscriptionErrorMessageError = ' Details for the error that should be passed to support, if needed: ' + err.msg;
+                      }
+                      if (err.message) {
+                        subscriptionErrorMessageError = ' Details for the error that should be passed to support, if needed: ' + err.message;
+                      }
+                      if (err.statusText) {
+                        subscriptionErrorMessageError = ' Details for the error that should be passed to support, if needed: ' + err.statusText;
+                      }
+                      if (subscriptionErrorMessageError) {
+                        subscriptionErrorMessage += subscriptionErrorMessageError;
+                      }
+                      return deferred.reject(subscriptionErrorMessage);
                     });
                   } else {
                     return deferred.resolve();
                   }
-                } else {
-                  return deferred.resolve();
-                }
+                });
               } else {
                 return deferred.resolve();
               }
+            } else {
+              return deferred.resolve();
             }
           }).error(function(data) {
             return deferred.reject(data);
           });
           return deferred.promise;
         },
-        waitForAsset: function() {
+        waitForAssets: function(assetIds) {
           var deferred, hasSubscription, that;
           that = this;
           deferred = $q.defer();
           hasSubscription = false;
-          that.requestUserSubscriptionInfo().then(function(response) {
-            if (response.data) {
-              return deferred.resolve();
-            } else {
-              return $timeout((function() {
-                return that.waitForAsset().then(function() {
-                  return deferred.resolve();
-                }, function(err) {
-                  return deferred.reject(err);
-                });
-              }), 1000);
-            }
-          }, function(err) {
-            return deferred.reject(err);
-          });
+          if (assetIds.length === 0) {
+            console.log("No assets to wait for");
+            deferred.resolve();
+          } else {
+            that.requestUserAssetInfo(assetIds).then(function(response) {
+              if (response.data) {
+                return deferred.resolve();
+              } else {
+                return $timeout((function() {
+                  return that.waitForAssets(assetIds).then(function() {
+                    return deferred.resolve();
+                  }, function(err) {
+                    return deferred.reject(err);
+                  });
+                }), 2000);
+              }
+            }, function(err) {
+              return deferred.reject(err);
+            });
+          }
           return deferred.promise;
         },
-        requestUserSubscriptionInfo: function() {
-          return $http.get('/api/assets/has-subscription');
+        requestUserAssetInfo: function(assetIds) {
+          var assetId, firstAsset, i, len, url;
+          url = '/api/assets/are-owned';
+          firstAsset = true;
+          for (i = 0, len = assetIds.length; i < len; i++) {
+            assetId = assetIds[i];
+            if (firstAsset) {
+              url += "?assetIds[]=" + assetId;
+            } else {
+              url += "&assetIds[]=" + assetId;
+            }
+          }
+          return $http.get(url);
         },
         redirectUser: function() {
           return $window.location.href = "/welcome";

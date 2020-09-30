@@ -498,7 +498,8 @@ angular.module('gi.commerce').provider 'giCart', () ->
                 $rootScope.$broadcast('giCart:paymentCompleted')
                 giEcommerceAnalytics.sendTransaction({ step: 4, option: 'Transaction Complete'}, cart.items)
                 # TODO: make it wait for all assets involved
-                that.waitForAsset().then(
+                assetIds = [item._data._id] for item in cart.items
+                that.waitForAssets(assetIds).then(
                   () ->
                     that.empty()
                     that.redirectUser()
@@ -546,91 +547,95 @@ angular.module('gi.commerce').provider 'giCart', () ->
           subscriptionRequest.company = that.company.name
 
         $http.post('/api/createSubscription', subscriptionRequest)
-        .success (response) ->
-          if response?.paymentMethod == "intent" && response.clientSecret
-            cart.client_secret = response.clientSecret
-            payNow().then () ->
-              deferred.resolve()
-            , (err) ->
-              deferred.reject(err)
-          else
-            if response?.paymentMethod == "subscription" && response.subscription
-              latestInvoice = response.subscription.latest_invoice
-              paymentIntent = latestInvoice.payment_intent
+        .success (subscription) ->
+          latestInvoice = subscription.latest_invoice
+          paymentIntent = latestInvoice.payment_intent
 
-              if paymentIntent
-                clientSecret = paymentIntent.client_secret
-                status = paymentIntent.status
+          if paymentIntent
+            clientSecret = paymentIntent.client_secret
+            status = paymentIntent.status
 
-                if (status == 'requires_action')
-                  stripeIns.confirmCardPayment(clientSecret).then( (result) ->
-                    if result.error
-                      $http.put("/api/cancel-subscription").then () ->
-                        deferred.reject "The card payment was rejected during confirmation"
-                      , (err) ->
-                          console.dir err
+            if (status == 'requires_action')
+              stripeIns.confirmCardPayment(clientSecret).then( (result) ->
+                if result.error
+                  $http.put("/api/cancel-subscription").then () ->
+                    deferred.reject "The card payment was rejected during confirmation"
+                  , (err) ->
+                      console.dir err
 
-                          subscriptionErrorMessage = "The card payment was rejected during confirmation and the incomplete subscription could not be cancelled automatically.
-                            Please get in touch with support via the chat or email, or cancel so manually in the My Account page."
+                      subscriptionErrorMessage = "The card payment was rejected during confirmation and the incomplete subscription could not be cancelled automatically.
+                        Please get in touch with support via the chat or email, or cancel so manually in the My Account page."
 
-                          subscriptionErrorMessageError = ''
+                      subscriptionErrorMessageError = ''
 
-                          if err.data
-                            subscriptionErrorMessageError = ' Details for the error that should be passed to support, if needed: ' + err.data
+                      if err.data
+                        subscriptionErrorMessageError = ' Details for the error that should be passed to support, if needed: ' + err.data
 
-                          if err.msg
-                            subscriptionErrorMessageError = ' Details for the error that should be passed to support, if needed: ' + err.msg
+                      if err.msg
+                        subscriptionErrorMessageError = ' Details for the error that should be passed to support, if needed: ' + err.msg
 
-                          if err.message
-                            subscriptionErrorMessageError = ' Details for the error that should be passed to support, if needed: ' + err.message
+                      if err.message
+                        subscriptionErrorMessageError = ' Details for the error that should be passed to support, if needed: ' + err.message
 
-                          if err.statusText
-                            subscriptionErrorMessageError = ' Details for the error that should be passed to support, if needed: ' + err.statusText
+                      if err.statusText
+                        subscriptionErrorMessageError = ' Details for the error that should be passed to support, if needed: ' + err.statusText
 
-                          if subscriptionErrorMessageError
-                            subscriptionErrorMessage += subscriptionErrorMessageError
+                      if subscriptionErrorMessageError
+                        subscriptionErrorMessage += subscriptionErrorMessageError
 
-                          deferred.reject subscriptionErrorMessage
-                    else
-                      deferred.resolve()
-                  )
+                      deferred.reject subscriptionErrorMessage
                 else
                   deferred.resolve()
-              else
-                deferred.resolve()
+              )
             else
               deferred.resolve()
+          else
+            deferred.resolve()
 
         .error (data) ->
           deferred.reject data
 
         deferred.promise
 
-      waitForAsset: () ->
+      waitForAssets: (assetIds) ->
         # TODO: Rewrite so that the not just subscriptions, but all items can be waited on and it works in case we don't have a subscription
         that = @
         deferred = $q.defer()
         hasSubscription = false
-        that.requestUserSubscriptionInfo().then(
-          (response) ->
-            if response.data
-              deferred.resolve()
-            else
-              $timeout ( ()->
-                that.waitForAsset().then( () ->
-                  deferred.resolve()
-                , (err)->
-                  deferred.reject(err)
-                )
-              ), 1000
-          , (err) ->
-            deferred.reject(err)
-        )
+
+        if assetIds.length == 0
+          console.log "No assets to wait for"
+          deferred.resolve()
+        else
+          that.requestUserAssetInfo(assetIds).then(
+            (response) ->
+              if response.data
+                deferred.resolve()
+              else
+                $timeout ( ()->
+                  that.waitForAssets(assetIds).then( () ->
+                    deferred.resolve()
+                  , (err)->
+                    deferred.reject(err)
+                  )
+                ), 2000
+            , (err) ->
+              deferred.reject(err)
+          )
 
         deferred.promise
 
-      requestUserSubscriptionInfo: () ->
-        return $http.get('/api/assets/has-subscription')
+      requestUserAssetInfo: (assetIds) ->
+        url = '/api/assets/are-owned'
+        firstAsset = true
+
+        for assetId in assetIds
+          if firstAsset
+            url += "?assetIds[]=" + assetId
+          else
+            url += "&assetIds[]=" + assetId
+
+        return $http.get(url)
 
       redirectUser: () ->
         $window.location.href = "/welcome"
