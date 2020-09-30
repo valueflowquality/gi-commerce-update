@@ -381,16 +381,15 @@ angular.module('gi.commerce').provider 'giCart', () ->
 
         if @billingAddress && @customer
           @saveAddress @billingAddress
+
         if @shippingAddress && @customer
           @saveAddress @shippingAddress
-        if cart.stage == 2
-          if @customerInfo and @customer
-            if cart.paymentType == 2
-              onSubmitInvoice()
-            else
-              onPreparePayment()
-        else
-          cart.stage += 1
+
+        if @customerInfo and @customer
+          if cart.paymentType == 2
+            onSubmitInvoice()
+          else
+            onPreparePayment()
 
       handleSubscriptionRequest: () ->
         that = @
@@ -407,6 +406,28 @@ angular.module('gi.commerce').provider 'giCart', () ->
           , (registrationErr) ->
             deferred.reject(registrationErr)
         )
+
+        deferred.promise
+
+      # Once item waiting is done for multiple Ids, add it here somewhere as well for this type of purchase
+      handleItemPurchase: () ->
+        that = @
+        deferred = $q.defer()
+
+        that.submitUserInfo().then () ->
+          that.preparePayment(cart, (client_secret) ->
+            console.dir client_secret
+            if client_secret
+              cart.client_secret = client_secret
+              that.payNow().then () ->
+                deferred.resolve()
+              , (err) ->
+                deferred.reject(err)
+            else
+              deferred.reject()
+          )
+        , (err) ->
+          deferred.reject(err)
 
         deferred.promise
 
@@ -442,19 +463,15 @@ angular.module('gi.commerce').provider 'giCart', () ->
       payNow: () ->
         that = @
         deferred = $q.defer()
-        console.log that.customer
         if cart.client_secret and cart.cardElement
           stripeIns = Payment.stripe.getStripeInstance()
           stripeIns.handleCardPayment(
             cart.client_secret,
             cart.cardElement
           ).then( (result) ->
-            console.log result.paymentIntent
             if result.paymentIntent
               $rootScope.$broadcast('giCart:paymentCompleted')
               giEcommerceAnalytics.sendTransaction({ step: 4, option: 'Transaction Complete'}, cart.items)
-              console.log result.paymentIntent
-              that.nextStage()
               that.empty()
               deferred.resolve()
             else
@@ -477,9 +494,10 @@ angular.module('gi.commerce').provider 'giCart', () ->
             }
           ).then (result) ->
             if result.paymentMethod
-              that.submitSubscriptionRequest(result.paymentMethod).then( () ->
+              that.submitSubscriptionRequest(result.paymentMethod).then( (paymentMethod) ->
                 $rootScope.$broadcast('giCart:paymentCompleted')
                 giEcommerceAnalytics.sendTransaction({ step: 4, option: 'Transaction Complete'}, cart.items)
+                # TODO: make it wait for all assets involved
                 that.waitForAsset().then(
                   () ->
                     that.empty()
@@ -528,50 +546,60 @@ angular.module('gi.commerce').provider 'giCart', () ->
           subscriptionRequest.company = that.company.name
 
         $http.post('/api/createSubscription', subscriptionRequest)
-        .success (subscription) ->
-          latestInvoice = subscription.latest_invoice
-          paymentIntent = latestInvoice.payment_intent
+        .success (response) ->
+          if response?.paymentMethod == "intent" && response.clientSecret
+            cart.client_secret = response.clientSecret
+            payNow().then () ->
+              deferred.resolve()
+            , (err) ->
+              deferred.reject(err)
+          else
+            if response?.paymentMethod == "subscription" && response.subscription
+              latestInvoice = response.subscription.latest_invoice
+              paymentIntent = latestInvoice.payment_intent
 
-          if paymentIntent
-            clientSecret = paymentIntent.client_secret
-            status = paymentIntent.status
+              if paymentIntent
+                clientSecret = paymentIntent.client_secret
+                status = paymentIntent.status
 
-            if (status == 'requires_action')
-              stripeIns.confirmCardPayment(clientSecret).then( (result) ->
-                if result.error
-                  $http.put("/api/cancel-subscription").then () ->
-                    deferred.reject "The card payment was rejected during confirmation"
-                  , (err) ->
-                      console.dir err
+                if (status == 'requires_action')
+                  stripeIns.confirmCardPayment(clientSecret).then( (result) ->
+                    if result.error
+                      $http.put("/api/cancel-subscription").then () ->
+                        deferred.reject "The card payment was rejected during confirmation"
+                      , (err) ->
+                          console.dir err
 
-                      subscriptionErrorMessage = "The card payment was rejected during confirmation and the incomplete subscription could not be cancelled automatically.
-                        Please get in touch with support via the chat or email, or cancel so manually in the My Account page."
+                          subscriptionErrorMessage = "The card payment was rejected during confirmation and the incomplete subscription could not be cancelled automatically.
+                            Please get in touch with support via the chat or email, or cancel so manually in the My Account page."
 
-                      subscriptionErrorMessageError = ''
+                          subscriptionErrorMessageError = ''
 
-                      if err.data
-                        subscriptionErrorMessageError = ' Details for the error that should be passed to support, if needed: ' + err.data
+                          if err.data
+                            subscriptionErrorMessageError = ' Details for the error that should be passed to support, if needed: ' + err.data
 
-                      if err.msg
-                        subscriptionErrorMessageError = ' Details for the error that should be passed to support, if needed: ' + err.msg
+                          if err.msg
+                            subscriptionErrorMessageError = ' Details for the error that should be passed to support, if needed: ' + err.msg
 
-                      if err.message
-                        subscriptionErrorMessageError = ' Details for the error that should be passed to support, if needed: ' + err.message
+                          if err.message
+                            subscriptionErrorMessageError = ' Details for the error that should be passed to support, if needed: ' + err.message
 
-                      if err.statusText
-                        subscriptionErrorMessageError = ' Details for the error that should be passed to support, if needed: ' + err.statusText
+                          if err.statusText
+                            subscriptionErrorMessageError = ' Details for the error that should be passed to support, if needed: ' + err.statusText
 
-                      if subscriptionErrorMessageError
-                        subscriptionErrorMessage += subscriptionErrorMessageError
+                          if subscriptionErrorMessageError
+                            subscriptionErrorMessage += subscriptionErrorMessageError
 
-                      deferred.reject subscriptionErrorMessage
+                          deferred.reject subscriptionErrorMessage
+                    else
+                      deferred.resolve()
+                  )
                 else
                   deferred.resolve()
-              )
+              else
+                deferred.resolve()
             else
               deferred.resolve()
-          else
-            deferred.resolve()
 
         .error (data) ->
           deferred.reject data
@@ -579,6 +607,7 @@ angular.module('gi.commerce').provider 'giCart', () ->
         deferred.promise
 
       waitForAsset: () ->
+        # TODO: Rewrite so that the not just subscriptions, but all items can be waited on and it works in case we don't have a subscription
         that = @
         deferred = $q.defer()
         hasSubscription = false
@@ -683,6 +712,7 @@ angular.module('gi.commerce').provider 'giCart', () ->
           callback(client_secret)
         , (err) ->
           $rootScope.$broadcast('giCart:paymentFailed', err)
+          callback()
 
       makeCharge: (chargeRequest, that) ->
         Payment.stripe.charge(chargeRequest).then (result) ->
