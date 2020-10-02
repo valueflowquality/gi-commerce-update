@@ -416,7 +416,6 @@ angular.module('gi.commerce').provider 'giCart', () ->
 
         that.submitUserInfo().then () ->
           that.preparePayment(cart, (client_secret) ->
-            console.dir client_secret
             if client_secret
               cart.client_secret = client_secret
               that.payNow().then () ->
@@ -472,8 +471,15 @@ angular.module('gi.commerce').provider 'giCart', () ->
             if result.paymentIntent
               $rootScope.$broadcast('giCart:paymentCompleted')
               giEcommerceAnalytics.sendTransaction({ step: 4, option: 'Transaction Complete'}, cart.items)
-              that.empty()
-              deferred.resolve()
+              assetIds = [item._data._id] for item in cart.items
+              that.waitForAssets(assetIds).then () ->
+                that.empty()
+                that.redirectUser()
+                deferred.resolve()
+              , (err) ->
+                that.empty()
+                $rootScope.$broadcast('giCart:paymentFailed', "An error occurred with the automatic redirect, please open the welcome page manually.")
+                deferred.reject()
             else
               if result.error
                 $rootScope.$broadcast('giCart:paymentFailed', result.error)
@@ -494,7 +500,7 @@ angular.module('gi.commerce').provider 'giCart', () ->
             }
           ).then (result) ->
             if result.paymentMethod
-              that.submitSubscriptionRequest(result.paymentMethod).then( (paymentMethod) ->
+              that.submitSubscriptionRequest(result.paymentMethod).then( () ->
                 $rootScope.$broadcast('giCart:paymentCompleted')
                 giEcommerceAnalytics.sendTransaction({ step: 4, option: 'Transaction Complete'}, cart.items)
                 # TODO: make it wait for all assets involved
@@ -643,6 +649,7 @@ angular.module('gi.commerce').provider 'giCart', () ->
       preparePayment: (cart, callback) ->
         that = @
         chargeRequest =
+          marketCode: cart.market.code
           total: that.totalCost()
           billing: that.billingAddress
           shipping: that.shippingAddress
@@ -652,6 +659,11 @@ angular.module('gi.commerce').provider 'giCart', () ->
             rate: cart.tax
             name: cart.taxName
           items: ({id: item._data._id, name: item._data.name, purchaseType: item._data.purchaseType}) for item in cart.items
+
+        if that.business
+          chargeRequest.business = that.business
+          chargeRequest.vat = that.company.VAT
+          chargeRequest.company = that.company.name
 
         if that.company?
           chargeRequest.company = that.company

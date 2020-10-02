@@ -1823,7 +1823,6 @@ angular.module('gi.commerce').provider('giCart', function() {
           deferred = $q.defer();
           that.submitUserInfo().then(function() {
             return that.preparePayment(cart, function(client_secret) {
-              console.dir(client_secret);
               if (client_secret) {
                 cart.client_secret = client_secret;
                 return that.payNow().then(function() {
@@ -1877,14 +1876,27 @@ angular.module('gi.commerce').provider('giCart', function() {
           if (cart.client_secret && cart.cardElement) {
             stripeIns = Payment.stripe.getStripeInstance();
             stripeIns.handleCardPayment(cart.client_secret, cart.cardElement).then(function(result) {
+              var assetIds, i, item, len, ref;
               if (result.paymentIntent) {
                 $rootScope.$broadcast('giCart:paymentCompleted');
                 giEcommerceAnalytics.sendTransaction({
                   step: 4,
                   option: 'Transaction Complete'
                 }, cart.items);
-                that.empty();
-                return deferred.resolve();
+                ref = cart.items;
+                for (i = 0, len = ref.length; i < len; i++) {
+                  item = ref[i];
+                  assetIds = [item._data._id];
+                }
+                return that.waitForAssets(assetIds).then(function() {
+                  that.empty();
+                  that.redirectUser();
+                  return deferred.resolve();
+                }, function(err) {
+                  that.empty();
+                  $rootScope.$broadcast('giCart:paymentFailed', "An error occurred with the automatic redirect, please open the welcome page manually.");
+                  return deferred.reject();
+                });
               } else {
                 if (result.error) {
                   $rootScope.$broadcast('giCart:paymentFailed', result.error);
@@ -1909,7 +1921,7 @@ angular.module('gi.commerce').provider('giCart', function() {
               }
             }).then(function(result) {
               if (result.paymentMethod) {
-                return that.submitSubscriptionRequest(result.paymentMethod).then(function(paymentMethod) {
+                return that.submitSubscriptionRequest(result.paymentMethod).then(function() {
                   var assetIds, i, item, len, ref;
                   $rootScope.$broadcast('giCart:paymentCompleted');
                   giEcommerceAnalytics.sendTransaction({
@@ -2083,6 +2095,7 @@ angular.module('gi.commerce').provider('giCart', function() {
           var chargeRequest, exp, item, match, that, uri;
           that = this;
           chargeRequest = {
+            marketCode: cart.market.code,
             total: that.totalCost(),
             billing: that.billingAddress,
             shipping: that.shippingAddress,
@@ -2107,6 +2120,11 @@ angular.module('gi.commerce').provider('giCart', function() {
               return results;
             })()
           };
+          if (that.business) {
+            chargeRequest.business = that.business;
+            chargeRequest.vat = that.company.VAT;
+            chargeRequest.company = that.company.name;
+          }
           if (that.company != null) {
             chargeRequest.company = that.company;
             exp = Util.vatRegex;
