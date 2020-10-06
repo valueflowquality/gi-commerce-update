@@ -74,8 +74,7 @@
                 <td ng-if="!isTrial || !item.getData().trialItem" class="item-name-cell">
                   <div class="item-title"><span>{{ item.getName() }}</span><div class="basket-tag" ng-if="item.getData().isSubscriptionItem"><div class="basket-tag-text">{{ item.getData().isMonthlySubscriptionItem ? 'Monthly' : 'Yearly' }}</div></div></div>
                   <div ng-if="item.getData().isSubscriptionItem" class="basket-subscription-text">
-                    <div class="basket-subscription-header">Full access to Value, Flow, Quality:</div>
-                    <div class="basket-subscription-line">Role-based online courses</div>
+                    <div class="basket-subscription-header">Full access to Value, Flow, Quality Library:</div>
                     <div class="basket-subscription-line">Learning modules</div>
                     <div class="basket-subscription-line">Techniques at a glance</div>
                     <div class="basket-subscription-header">Quarterly content releases</div>
@@ -465,8 +464,8 @@
           --><div class="confirmation-button-container">
             <div class="btn checkout-submit"
               tabindex="9"
-              ng-click="subscribeNow()"
-              gi-enter="subscribeNow()"
+              ng-click="purchase()"
+              gi-enter="purchase()"
               ng-disabled="cart.isCheckoutFormInvalid() || isSpinnerShown">
                 CONFIRM PURCHASE
             </div>

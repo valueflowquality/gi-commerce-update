@@ -32,6 +32,21 @@ angular.module('gi.commerce').directive 'giCheckout'
 
       deferred.promise
 
+    purchaseItems = () ->
+      deferred = $q.defer()
+
+      deferred = $q.defer()
+      $scope.inPayment = true
+      Cart.handleItemPurchase().then () ->
+        # retained as true to keep hiding the form cotents until the redirect
+        $scope.inPayment = true
+        deferred.resolve()
+      , () ->
+        $scope.inPayment = false
+        deferred.reject()
+
+      deferred.promise
+
     $scope.pageReady = true
     $scope.cart = Cart
     $scope.cart.billingAddress = {}
@@ -75,7 +90,6 @@ angular.module('gi.commerce').directive 'giCheckout'
 
     $scope.$watch 'cartItems.length', () ->
       itemFound = false
-      console.log('cartItems.length')
       for item in $scope.cartItems
         console.dir(item.getData())
         if item.getData().isSubscriptionItem
@@ -99,8 +113,17 @@ angular.module('gi.commerce').directive 'giCheckout'
         if $scope.checkoutForm.vat
           $scope.checkoutForm.vat.$validate()
 
-    $scope.subscribeNow = () ->
-      wrapSpinner(invokeCartPayment())
+    $scope.purchase = (cart) ->
+      subscriptionFound = false
+      for item in $scope.cartItems
+        if item.getData().isSubscriptionItem
+          subscriptionFound = true
+          break
+
+      if subscriptionFound
+        wrapSpinner(invokeCartPayment())
+      else
+        wrapSpinner(purchaseItems())
 
     $scope.$on 'giCart:paymentFailed', (e, data) ->
       if data?

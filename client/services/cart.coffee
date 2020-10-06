@@ -381,16 +381,15 @@ angular.module('gi.commerce').provider 'giCart', () ->
 
         if @billingAddress && @customer
           @saveAddress @billingAddress
+
         if @shippingAddress && @customer
           @saveAddress @shippingAddress
-        if cart.stage == 2
-          if @customerInfo and @customer
-            if cart.paymentType == 2
-              onSubmitInvoice()
-            else
-              onPreparePayment()
-        else
-          cart.stage += 1
+
+        if @customerInfo and @customer
+          if cart.paymentType == 2
+            onSubmitInvoice()
+          else
+            onPreparePayment()
 
       handleSubscriptionRequest: () ->
         that = @
@@ -407,6 +406,27 @@ angular.module('gi.commerce').provider 'giCart', () ->
           , (registrationErr) ->
             deferred.reject(registrationErr)
         )
+
+        deferred.promise
+
+      # Once item waiting is done for multiple Ids, add it here somewhere as well for this type of purchase
+      handleItemPurchase: () ->
+        that = @
+        deferred = $q.defer()
+
+        that.submitUserInfo().then () ->
+          that.preparePayment(cart, (client_secret) ->
+            if client_secret
+              cart.client_secret = client_secret
+              that.payNow().then () ->
+                deferred.resolve()
+              , (err) ->
+                deferred.reject(err)
+            else
+              deferred.reject()
+          )
+        , (err) ->
+          deferred.reject(err)
 
         deferred.promise
 
@@ -442,21 +462,24 @@ angular.module('gi.commerce').provider 'giCart', () ->
       payNow: () ->
         that = @
         deferred = $q.defer()
-        console.log that.customer
         if cart.client_secret and cart.cardElement
           stripeIns = Payment.stripe.getStripeInstance()
           stripeIns.handleCardPayment(
             cart.client_secret,
             cart.cardElement
           ).then( (result) ->
-            console.log result.paymentIntent
             if result.paymentIntent
               $rootScope.$broadcast('giCart:paymentCompleted')
               giEcommerceAnalytics.sendTransaction({ step: 4, option: 'Transaction Complete'}, cart.items)
-              console.log result.paymentIntent
-              that.nextStage()
-              that.empty()
-              deferred.resolve()
+              assetIds = [item._data._id] for item in cart.items
+              that.waitForAssets(assetIds).then () ->
+                that.empty()
+                that.redirectUser()
+                deferred.resolve()
+              , (err) ->
+                that.empty()
+                $rootScope.$broadcast('giCart:paymentFailed', "An error occurred with the automatic redirect, please open the welcome page manually.")
+                deferred.reject()
             else
               if result.error
                 $rootScope.$broadcast('giCart:paymentFailed', result.error)
@@ -480,7 +503,9 @@ angular.module('gi.commerce').provider 'giCart', () ->
               that.submitSubscriptionRequest(result.paymentMethod).then( () ->
                 $rootScope.$broadcast('giCart:paymentCompleted')
                 giEcommerceAnalytics.sendTransaction({ step: 4, option: 'Transaction Complete'}, cart.items)
-                that.waitForAsset().then(
+                # TODO: make it wait for all assets involved
+                assetIds = [item._data._id] for item in cart.items
+                that.waitForAssets(assetIds).then(
                   () ->
                     that.empty()
                     that.redirectUser()
@@ -578,30 +603,45 @@ angular.module('gi.commerce').provider 'giCart', () ->
 
         deferred.promise
 
-      waitForAsset: () ->
+      waitForAssets: (assetIds) ->
+        # TODO: Rewrite so that the not just subscriptions, but all items can be waited on and it works in case we don't have a subscription
         that = @
         deferred = $q.defer()
         hasSubscription = false
-        that.requestUserSubscriptionInfo().then(
-          (response) ->
-            if response.data
-              deferred.resolve()
-            else
-              $timeout ( ()->
-                that.waitForAsset().then( () ->
-                  deferred.resolve()
-                , (err)->
-                  deferred.reject(err)
-                )
-              ), 1000
-          , (err) ->
-            deferred.reject(err)
-        )
+
+        if assetIds.length == 0
+          console.log "No assets to wait for"
+          deferred.resolve()
+        else
+          that.requestUserAssetInfo(assetIds).then(
+            (response) ->
+              if response.data
+                deferred.resolve()
+              else
+                $timeout ( ()->
+                  that.waitForAssets(assetIds).then( () ->
+                    deferred.resolve()
+                  , (err)->
+                    deferred.reject(err)
+                  )
+                ), 2000
+            , (err) ->
+              deferred.reject(err)
+          )
 
         deferred.promise
 
-      requestUserSubscriptionInfo: () ->
-        return $http.get('/api/assets/has-subscription')
+      requestUserAssetInfo: (assetIds) ->
+        url = '/api/assets/are-owned'
+        firstAsset = true
+
+        for assetId in assetIds
+          if firstAsset
+            url += "?assetIds[]=" + assetId
+          else
+            url += "&assetIds[]=" + assetId
+
+        return $http.get(url)
 
       redirectUser: () ->
         $window.location.href = "/welcome"
@@ -609,6 +649,7 @@ angular.module('gi.commerce').provider 'giCart', () ->
       preparePayment: (cart, callback) ->
         that = @
         chargeRequest =
+          marketCode: cart.market.code
           total: that.totalCost()
           billing: that.billingAddress
           shipping: that.shippingAddress
@@ -618,6 +659,11 @@ angular.module('gi.commerce').provider 'giCart', () ->
             rate: cart.tax
             name: cart.taxName
           items: ({id: item._data._id, name: item._data.name, purchaseType: item._data.purchaseType}) for item in cart.items
+
+        if that.business
+          chargeRequest.business = that.business
+          chargeRequest.vat = that.company.VAT
+          chargeRequest.company = that.company.name
 
         if that.company?
           chargeRequest.company = that.company
@@ -683,6 +729,7 @@ angular.module('gi.commerce').provider 'giCart', () ->
           callback(client_secret)
         , (err) ->
           $rootScope.$broadcast('giCart:paymentFailed', err)
+          callback()
 
       makeCharge: (chargeRequest, that) ->
         Payment.stripe.charge(chargeRequest).then (result) ->
