@@ -16,6 +16,7 @@ angular.module('gi.commerce').provider 'giCart', () ->
       taxInclusive: cart.taxInclusive
       taxExempt: cart.taxExempt
       coupon: cart.coupon
+      itemDiscountApplied: cart.itemDiscountApplied
 
     getItemById = (itemId) ->
       build = null
@@ -73,6 +74,7 @@ angular.module('gi.commerce').provider 'giCart', () ->
         cardElementValid: undefined
         business: false
         isLocalBusiness: false
+        itemDiscountApplied: false
       return
 
     save = () ->
@@ -242,6 +244,12 @@ angular.module('gi.commerce').provider 'giCart', () ->
 
       getCouponDurationMonths: () ->
         cart.coupon.duration_in_months
+
+      getCouponDuration: () ->
+        cart.itemDiscountApplied
+
+      setItemDiscountApplied: (applied) ->
+        cart.itemDiscountApplied = applied
 
       isStageInvalid: (stage) ->
         if cart.validStages[stage]?

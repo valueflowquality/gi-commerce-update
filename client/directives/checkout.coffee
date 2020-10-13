@@ -89,16 +89,33 @@ angular.module('gi.commerce').directive 'giCheckout'
         $scope.isTrial = true
 
     $scope.$watch 'cartItems.length', () ->
-      itemFound = false
+      subscriptionFound = false
+      itemDiscountFound = false
       for item in $scope.cartItems
-        console.dir(item.getData())
-        if item.getData().isSubscriptionItem
-          itemFound = true
+        itemData = item.getData()
+        if itemData.isSubscriptionItem
+          subscriptionFound = true
           $scope.subscriptionItem = item
           break
 
-      if !itemFound
+        if itemData.appliesItemDiscount
+          itemDiscountFound = true
+          break
+
+      if !subscriptionFound
         $scope.subscriptionItem = undefined
+
+      Cart.setItemDiscountApplied(itemDiscountFound || checkIfDiscountItemOwned())
+
+    checkIfDiscountItemOwned = () ->
+      if $scope.model.assets
+        for asset in $scope.model.assets
+          console.log asset.appliesItemDiscount
+          if asset.owned && asset.appliesItemDiscount
+            console.log "satisfied"
+            return true
+
+      return false
 
     $scope.$watch 'model.userCountry', (newVal) ->
       if newVal?
