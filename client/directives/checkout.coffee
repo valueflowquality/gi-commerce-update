@@ -47,7 +47,6 @@ angular.module('gi.commerce').directive 'giCheckout'
 
       deferred.promise
 
-    $scope.pageReady = true
     $scope.cart = Cart
     $scope.cart.billingAddress = {}
     $scope.isSpinnerShown = false
@@ -57,6 +56,8 @@ angular.module('gi.commerce').directive 'giCheckout'
     $scope.pricesLoaded = false
     $scope.cartItems = $scope.cart.getItems()
     $scope.emailRegex = Util.emailRegex
+    $scope.discountItemOwned = false
+    $scope.itemDiscountInCart = false
 
     $timeout ( ()->
       $scope.pricesLoaded = true
@@ -91,31 +92,41 @@ angular.module('gi.commerce').directive 'giCheckout'
     $scope.$watch 'cartItems.length', () ->
       subscriptionFound = false
       itemDiscountFound = false
+
       for item in $scope.cartItems
         itemData = item.getData()
+
         if itemData.isSubscriptionItem
           subscriptionFound = true
           $scope.subscriptionItem = item
-          break
 
         if itemData.appliesItemDiscount
+          $scope.itemDiscountInCart = true
           itemDiscountFound = true
-          break
 
       if !subscriptionFound
         $scope.subscriptionItem = undefined
 
-      Cart.setItemDiscountApplied(itemDiscountFound || checkIfDiscountItemOwned())
+      if !itemDiscountFound
+        $scope.itemDiscountInCart = false
 
-    checkIfDiscountItemOwned = () ->
+      processItemDiscount()
+
+    processItemDiscount = () ->
+      Cart.setItemDiscountApplied($scope.itemDiscountInCart || $scope.discountItemOwned)
+
+    $scope.$watch 'model.assets[0].owned', () ->
+      itemDiscountFound = false
       if $scope.model.assets
         for asset in $scope.model.assets
-          console.log asset.appliesItemDiscount
           if asset.owned && asset.appliesItemDiscount
-            console.log "satisfied"
-            return true
+            $scope.discountItemOwned = true
+            itemDiscountFound = true
 
-      return false
+      if !itemDiscountFound
+        $scope.discountItemOwned = false
+
+      processItemDiscount()
 
     $scope.$watch 'model.userCountry', (newVal) ->
       if newVal?

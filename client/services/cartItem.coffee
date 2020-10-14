@@ -40,7 +40,7 @@ angular.module('gi.commerce').factory 'giCartItem'
       price = BigNumber(@_priceList.prices[marketCode])
       if !ignoreDiscount
          if priceInfo.itemDiscountApplied && @_data.itemDiscount
-          price = price.minus(@_data.itemDiscount)
+          price = price.minus(price.times(@_data.itemDiscount))
 
         if priceInfo.coupon?.valid
           if priceInfo.coupon.percent_off
