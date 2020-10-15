@@ -1,11 +1,11 @@
-<div class="container preloader-wrapper" ng-if="pageReady == false || !pricesLoaded">
+<div class="container preloader-wrapper" ng-if="!pricesLoaded">
   <div class="preloader">
     <div class="dot"></div>
     <div class="dot"></div>
     <div class="dot"></div>
   </div>
 </div>
-<div ng-show="pageReady && pricesLoaded" class="container gi-cart checkout-container">
+<div ng-show="pricesLoaded" class="container gi-cart checkout-container">
   <div class="row medium-gap">
     <div ng-if="errorMessage" ng-click="removeError()" class="error-box">{{ errorMessage }}</div>
   </div>
