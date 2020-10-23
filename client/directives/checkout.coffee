@@ -228,7 +228,7 @@ angular.module('gi.commerce').directive 'giCheckout'
           else
             errorMessage = 'Field must be at least 2 latin letters without numbers.'
         else
-          errorMessage = "Field isn't not filled correctly."
+          errorMessage = "Field isn't filled correctly."
       if needsMessage
         errorMessage
       else

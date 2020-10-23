@@ -6,7 +6,7 @@
   </div>
 </div>
 <div ng-show="pricesLoaded" class="container gi-cart checkout-container">
-  <div class="row medium-gap">
+  <div class="row checkout-gap">
     <div ng-if="errorMessage" ng-click="removeError()" class="error-box">{{ errorMessage }}</div>
   </div>
   <div class="row" ng-show="cart.totalItems() === 0 && !inPayment">
@@ -17,6 +17,205 @@
   <div ng-cloak class="small-gap" ng-show="cart.totalItems() > 0">
     <span us-spinner="{radius:30, width:8, length: 16}" spinner-key="gi-cart-spinner-1"></span>
     <div ng-form name="checkoutForm" class="checkout-form" ng-show="!inPayment">
+      <div class="checkout-flex-container">
+        <div class="checkout-input-section">
+          <div class="checkout-section-title-wrapper">
+            <div class="checkout-section-title">
+              Checkout
+            </div>
+            <div class="login-reminder-container" ng-if="!model.me.loggedIn">
+              <span class="sign-in-text">Already have an account? <a class="checkout-href" ng-click="showLoginForm()">Sign in</a></span>
+            </div>
+          </div>
+          <div class="checkout-subsection" ng-if="!model.me.loggedIn">
+            <div class="checkout-subsection-title">
+              Personal Details
+            </div>
+            <div class="checkout-input-container">
+              <div class="checkout-input-row">
+                <div class="form-group">
+                  <div data-hj-suppress="" class="input-container"
+                    ng-class="{'has-error': isPropertyValidationError('firstName'), 'has-success': isPropertyValidationSuccess('firstName')}">
+                    <input class="form-control"
+                      type="text"
+                      tabindex="1"
+                      maxlength="50"
+                      name="firstName"
+                      ng-model="cart.customerInfo.firstName"
+                      placeholder="First Name"
+                      required/><!--
+                    --><div class="input-validity-indicator">
+                      <div class="validity-icon">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <div data-hj-suppress="" class="input-container"
+                    ng-class="{'has-error': isPropertyValidationError('lastName'), 'has-success': isPropertyValidationSuccess('lastName')}">
+                    <input class="form-control"
+                      type="text"
+                      tabindex="1"
+                      name="lastName"
+                      maxlength="50"
+                      ng-model="cart.customerInfo.lastName"
+                      ng-pattern="lastNameRegex"
+                      placeholder="Last Name"
+                      ng-trim="false"
+                      required/><!--
+                    --><div class="input-validity-indicator">
+                      <div class="validity-icon">
+                      </div>
+                    </div>
+                    </div>
+                </div>
+              </div>
+              <div class="checkout-input-row">
+                <div class="form-group">
+                  <div data-hj-suppress="" class="input-container"
+                    ng-class="{'has-error': isPropertyValidationError('email'), 'has-success': isPropertyValidationSuccess('email')}">
+                    <input class="form-control"
+                      type="email"
+                      tabindex="1"
+                      name="email"
+                      maxlength="100"
+                      placeholder="Email"
+                      ng-model="cart.customerInfo.email"
+                      ng-pattern="emailRegex"
+                      gi-username
+                      required/><!--
+                    --><div class="input-validity-indicator">
+                      <div class="validity-icon">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="checkout-input-row">
+                <div class="form-group">
+                  <div data-hj-suppress="" class="input-container"
+                    ng-class="{'has-error': isPropertyValidationError('password'), 'has-success': isPropertyValidationSuccess('password')}">
+                    <input class="form-control"
+                      type="password"
+                      tabindex="1"
+                      maxlength="50"
+                      name="password"
+                      placeholder="Password"
+                      ng-model="cart.customerInfo.password"
+                      gi-password
+                      ng-required="!model.me.loggedIn"/><!--
+                    --><div class="input-validity-indicator">
+                      <div class="validity-icon">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <div data-hj-suppress="" class="input-container"
+                    ng-class="{'has-error': isPropertyValidationError('confirm'), 'has-success': isPropertyValidationSuccess('confirm')}">
+                    <input class="form-control"
+                      type="password"
+                      tabindex="1"
+                      maxlength="50"
+                      name="confirm"
+                      ng-model="cart.customerInfo.confirm"
+                      placeholder="Confirm Password"
+                      gi-match="cart.customerInfo.password"
+                      ng-required="!model.me.loggedIn"
+                      tabindex="1"/><!--
+                    --><div class="input-validity-indicator">
+                      <div class="validity-icon">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="checkout-subsection">
+            <div class="checkout-subsection-title">
+              Payment Information
+            </div>
+            <div class="form-group company-checkbox">
+              <div class="checkbox checkbox-success">
+                <input type="checkbox" ng-model="cart.business">
+                <label ng-click="cart.business = !cart.business" class="">Buying for a business?</label>
+              </div>
+            </div>
+            <div class="checkout-input-container">
+              <div class="checkout-input-row" ng-show="cart.business">
+                <div class="form-group">
+                  <div class="input-container"
+                    ng-class="{'has-error': isPropertyValidationError('companyName'), 'has-success': isPropertyValidationSuccess('companyName')}">
+                    <input data-hj-suppress="" class="form-control"
+                      type="text"
+                      tabindex="1"
+                      maxlength="100"
+                      name="companyName"
+                      ng-model="cart.company.name"
+                      ng-required="cart.business"
+                      placeholder="Company"/><!--
+                    --><div class="input-validity-indicator">
+                      <div class="validity-icon">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <div data-hj-suppress="" class="input-container"
+                    ng-class="{'has-error': isPropertyValidationError('vat'), 'has-success': isPropertyValidationSuccess('vat')}">
+                    <input class="form-control"
+                      type="text"
+                      tabindex="1"
+                      maxlength="50"
+                      name="vat"
+                      ng-model="cart.company.VAT"
+                      placeholder="VAT Number (optional)"
+                      gi-vat/><!--
+                    --><div class="input-validity-indicator">
+                      <div class="validity-icon">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="checkout-input-row">
+                <div class="checkout-card-wrapper" data-hj-suppress=""
+                  ng-class="{'has-error': cart.isCardElementFormValid() == false, 'has-success': cart.isCardElementFormValid() == true}">
+                  <div id="checkout-card-container"></div><!--
+                    --><div class="input-validity-indicator">
+                      <div class="validity-icon">
+                      </div>
+                    </div>
+                </div>
+              </div>
+              <!-- <div class="checkout-input-row">
+                <div class="form-group">
+                  <div data-hj-suppress="" class="input-container"
+                    ng-class="{'has-error': isPropertyValidationError('couponCode'), 'has-success': isPropertyValidationSuccess('couponCode')}">
+                    <input class="form-control"
+                      type="text"
+                      tabindex="1"
+                      maxlength="50"
+                      name="couponCode"
+                      ng-model="cart.couponCode"
+                      placeholder="Promotional Code" coupon-valid/>
+                    <div class="input-validity-indicator">
+                      <div class="validity-icon">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div> -->
+            </div>
+          </div>
+        </div>
+        <div class="checkout-product-section">
+          <div class="cart-title">Cart</div>
+        </div>
+      </div>
+    </div>
+    <div ng-form name="checkoutFormz" class="checkout-form" ng-show="!inPayment">
       <div class="two-third-block centered-block">
         <div class="checkout-summary-container">
           <table class="table checkout-table">
@@ -296,14 +495,14 @@
                   </div>
                 </div><!--
                 --><div data-hj-suppress="" class="checkout-input-wrapper">
-                  <div class="checkout-card-wrapper">
-                    <div id="checkout-card-container"></div><!--
-                      --><div class="input-validity-indicator">
+                  <!-- <div class="checkout-card-wrapper">
+                    <div id="checkout-card-container"></div>
+                      <div class="input-validity-indicator">
                         <div class="validity-icon"
                         ng-class="{'has-error': cart.isCardElementFormValid() == false, 'has-success': cart.isCardElementFormValid() == true}">
                         </div>
                       </div>
-                  </div>
+                  </div> -->
                 </div><!--
                 --><div class="checkout-input-wrapper">
                   <div class="form-group">
