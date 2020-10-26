@@ -234,6 +234,9 @@ angular.module('gi.commerce').directive 'giCheckout'
       else
         isInvalid
 
+    $scope.getTypeName = (item) ->
+      item._data.assetTypeId
+
     $scope.isPropertyValidationSuccess = (prop) ->
       fieldUsed(prop) and
       $scope.checkoutForm[prop].$valid and
