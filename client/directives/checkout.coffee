@@ -58,6 +58,7 @@ angular.module('gi.commerce').directive 'giCheckout'
     $scope.emailRegex = Util.emailRegex
     $scope.discountItemOwned = false
     $scope.itemDiscountInCart = false
+    $scope.errorMessages = [];
 
     $timeout ( ()->
       $scope.pricesLoaded = true
@@ -215,24 +216,53 @@ angular.module('gi.commerce').directive 'giCheckout'
       if country
         $scope.validCountry = true
 
-    $scope.isPropertyValidationError = (prop, needsMessage) ->
+    $scope.isPropertyValidationError = (prop) ->
       errorMessage = ''
       isInvalid =
         fieldUsed(prop) and
         $scope.checkoutForm[prop].$invalid
 
       if isInvalid
+        error = $scope.checkoutForm[prop].$error
+
         if prop is 'lastName'
           if $scope.checkoutForm[prop].$viewValue and ($scope.checkoutForm[prop].$viewValue).includes(' ')
-            errorMessage = 'Field must not include spaces.'
+            $scope.errorMessages[prop] = 'Must not include spaces'
           else
-            errorMessage = 'Field must be at least 2 latin letters without numbers.'
+            $scope.errorMessages[prop] = 'Must include 2 letters'
         else
-          errorMessage = "Field isn't not filled correctly."
-      if needsMessage
-        errorMessage
+          $scope.errorMessages[prop] = getErrorMessage(error)
+
       else
+        $scope.errorMessages[prop] = ''
+
         isInvalid
+
+    getErrorMessage = (error) ->
+      if error.required
+        return "Required field"
+
+      if error.pattern
+        return "Incorrect format"
+
+      if error.giUsername
+        return "Email in use"
+
+      if error.giPassword
+        return "Must include 8 characters"
+
+      if error.giPassword
+        return "Password doesn't match"
+
+      return "Invalid value"
+
+    $scope.getTypeName = (item) ->
+      if item._data.assetTypeId
+        for assetType in $scope.model.assetTypes
+          if assetType._id == item._data.assetTypeId
+            return assetType.displayName
+
+      return "Shop Item"
 
     $scope.isPropertyValidationSuccess = (prop) ->
       fieldUsed(prop) and
