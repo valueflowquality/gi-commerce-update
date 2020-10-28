@@ -254,10 +254,15 @@ angular.module('gi.commerce').directive 'giCheckout'
       if error.giPassword
         return "Password doesn't match"
 
-      return error
+      return "Invalid value"
 
     $scope.getTypeName = (item) ->
-      item._data.assetTypeId
+      if item._data.assetTypeId
+        for assetType in $scope.model.assetTypes
+          if assetType._id == item._data.assetTypeId
+            return assetType.displayName
+
+      return "Shop Item"
 
     $scope.isPropertyValidationSuccess = (prop) ->
       fieldUsed(prop) and
