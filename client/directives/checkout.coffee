@@ -257,7 +257,7 @@ angular.module('gi.commerce').directive 'giCheckout'
       return "Invalid value"
 
     $scope.getTypeName = (item) ->
-      if item._data.assetTypeId
+      if item._data.assetTypeId && $scope.model?.assetTypes
         for assetType in $scope.model.assetTypes
           if assetType._id == item._data.assetTypeId
             return assetType.displayName
