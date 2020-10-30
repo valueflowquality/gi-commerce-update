@@ -34,8 +34,6 @@ angular.module('gi.commerce').directive 'giCheckout'
 
     purchaseItems = () ->
       deferred = $q.defer()
-
-      deferred = $q.defer()
       $scope.inPayment = true
       Cart.handleItemPurchase().then () ->
         # retained as true to keep hiding the form cotents until the redirect
@@ -182,6 +180,9 @@ angular.module('gi.commerce').directive 'giCheckout'
         $location.path('login').search('next', '/a/checkout')
       else
         $scope.showLoginModal()
+
+    $scope.logout = () ->
+      $location.path('logout')
 
     $scope.showLoginModal = (size) ->
       modalInstance = $modal.open(
