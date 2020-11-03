@@ -18,13 +18,42 @@
     <span us-spinner="{radius:30, width:8, length: 16}" spinner-key="gi-cart-spinner-1"></span>
     <div ng-form name="checkoutForm" class="checkout-form" ng-show="!inPayment">
       <div class="checkout-flex-container">
+        <div class="checkout-mobile-section-title-wrapper">
+          <div class="checkout-section-title">
+            Checkout
+          </div>
+          <div class="login-reminder-container" ng-if="!model.me.loggedIn">
+            <div class="sign-in-button" ng-click="showLoginForm()">SIGN IN</div>
+          </div>
+        </div>
+        <div class="checkout-mobile-product-section">
+          <div class="cart-title">Cart</div>
+          <div class="cart-item-counter">{{cartItems.length}}</div>
+          <div class="cart-items">
+            <div class="cart-item" ng-repeat="item in cartItems track by $index">
+              <div class="cart-item-info">
+                <div class="cart-item-type">{{ getTypeName(item) }}</div>
+                <div class="cart-item-title">{{ item.getName() }}</div>
+                <div class="cart-item-description">{{ item.getData().basketDescription }}</div>
+              </div>
+              <div class="cart-item-buttons">
+                <div class="cart-item-price">{{ item.getTotal(cart.getPricingInfo()) | giCurrency:cart.getCurrencySymbol() }}</div>
+                <div class="cart-item-delete" ng-click="cart.removeItem($index)">Remove</div>
+              </div>
+            </div>
+          </div>
+          <div class="confirm-total">
+            <div class="confirm-total-title">Total</div>
+            <div class="confirm-total-price">{{ cart.totalCost(isTrial, true) | giCurrency:cart.getCurrencySymbol() }}</div>
+          </div>
+        </div>
         <div class="checkout-input-section">
           <div class="checkout-section-title-wrapper">
             <div class="checkout-section-title">
               Checkout
             </div>
             <div class="login-reminder-container" ng-if="!model.me.loggedIn">
-              <span class="sign-in-text">Already have an account? <a class="checkout-href" ng-click="showLoginForm()">Sign in</a></span>
+              <div class="sign-in-button" ng-click="showLoginForm()">SIGN IN</div>
             </div>
           </div>
           <div class="checkout-subsection" ng-if="!model.me.loggedIn">
@@ -51,6 +80,7 @@
                   </div>
                   <div class="error-tooltip left-error-tooltip" ng-show="errorMessages['firstName']">
                     {{ errorMessages['firstName'] }}
+                    <div class="arrow-tip"></div>
                   </div>
                 </div>
                 <div class="form-group error-container">
@@ -73,6 +103,7 @@
                   </div>
                   <div class="error-tooltip right-error-tooltip" ng-show="errorMessages['lastName']">
                     {{ errorMessages['lastName'] }}
+                    <div class="arrow-tip"></div>
                   </div>
                 </div>
               </div>
@@ -97,6 +128,7 @@
                   </div>
                   <div class="error-tooltip left-error-tooltip" ng-show="errorMessages['email']">
                     {{ errorMessages['email'] }}
+                    <div class="arrow-tip"></div>
                   </div>
                 </div>
               </div>
@@ -120,6 +152,7 @@
                   </div>
                   <div class="error-tooltip left-error-tooltip" ng-show="errorMessages['password']">
                     {{ errorMessages['password'] }}
+                    <div class="arrow-tip"></div>
                   </div>
                 </div>
                 <div class="form-group error-container">
@@ -142,6 +175,7 @@
                   </div>
                   <div class="error-tooltip right-error-tooltip" ng-show="errorMessages['confirm']">
                     {{ errorMessages['confirm'] }}
+                    <div class="arrow-tip"></div>
                   </div>
                 </div>
               </div>
@@ -152,18 +186,20 @@
               <div class="welcome-back-title">Welcome back, {{ model.me.user.firstName }}</div>
               <div class="welcome-back-email">{{ model.me.user.email }}</div>
             </div>
-            <div class="welcome-back-log-out">
-              Not you? <a class="checkout-href" href="/a/logout">Create an account</a>
+            <div ng-click="logout()" class="sign-out-button">
+              SIGN OUT
             </div>
           </div>
           <div class="checkout-subsection">
             <div class="checkout-subsection-title">
               Payment Information
             </div>
-            <div class="form-group company-checkbox">
+            <div class="form-group company-checkbox"
+              ng-click="cart.business = !cart.business"
+              ng-class="{checked: cart.business}">
               <div class="checkbox checkbox-success">
                 <input type="checkbox" ng-model="cart.business">
-                <label ng-click="cart.business = !cart.business" class="">Buying for a business?</label>
+                <label unselectable="on" class="no-selection">Buying for a business?</label>
               </div>
             </div>
             <div class="checkout-input-container">
@@ -186,6 +222,7 @@
                   </div>
                   <div class="error-tooltip left-error-tooltip" ng-show="errorMessages['companyName']">
                     {{ errorMessages['companyName'] }}
+                    <div class="arrow-tip"></div>
                   </div>
                 </div>
                 <div class="form-group error-container">
@@ -206,6 +243,7 @@
                   </div>
                   <div class="error-tooltip right-error-tooltip" ng-show="errorMessages['vat']">
                     {{ errorMessages['vat'] }}
+                    <div class="arrow-tip"></div>
                   </div>
                 </div>
               </div>
@@ -262,6 +300,7 @@
                   </div>
                   <div class="error-tooltip left-error-tooltip" ng-show="errorMessages['billing-line1']">
                     {{ errorMessages['billing-line1'] }}
+                    <div class="arrow-tip"></div>
                   </div>
                 </div>
                 <div class="form-group error-container">
@@ -280,6 +319,7 @@
                   </div>
                   <div class="error-tooltip right-error-tooltip" ng-show="errorMessages['billing-line2']">
                     {{ errorMessages['billing-line2'] }}
+                    <div class="arrow-tip"></div>
                   </div>
                 </div>
               </div>
@@ -302,6 +342,7 @@
                   </div>
                   <div class="error-tooltip left-error-tooltip" ng-show="errorMessages['billing-city']">
                     {{ errorMessages['billing-city'] }}
+                    <div class="arrow-tip"></div>
                   </div>
                 </div>
                 <div class="form-group error-container">
@@ -320,6 +361,7 @@
                   </div>
                   <div class="error-tooltip right-error-tooltip" ng-show="errorMessages['billing-state']">
                     {{ errorMessages['billing-state'] }}
+                    <div class="arrow-tip"></div>
                   </div>
                 </div>
               </div>
@@ -350,6 +392,7 @@
                   </div>
                   <div class="error-tooltip right-error-tooltip" ng-show="errorMessages['billing-code']">
                     {{ errorMessages['billing-code'] }}
+                    <div class="arrow-tip"></div>
                   </div>
                 </div>
               </div>
@@ -358,18 +401,20 @@
         </div>
         <div class="checkout-product-section-wrapper">
           <div class="checkout-product-section">
-            <div class="cart-title">Cart</div>
-            <div class="cart-item-counter">{{cartItems.length}}</div>
-            <div class="cart-items">
-              <div class="cart-item" ng-repeat="item in cartItems track by $index">
-                <div class="cart-item-info">
-                  <div class="cart-item-type">{{ getTypeName(item) }}</div>
-                  <div class="cart-item-title">{{ item.getName() }}</div>
-                  <div class="cart-item-description">{{ item.getData().basketDescription }}</div>
-                </div>
-                <div class="cart-item-buttons">
-                  <div class="cart-item-price">{{ item.getTotal(cart.getPricingInfo()) | giCurrency:cart.getCurrencySymbol() }}</div>
-                  <div class="cart-item-delete" ng-click="cart.removeItem($index)">Remove</div>
+            <div class="checkout-product-cart-section">
+              <div class="cart-title">Cart</div>
+              <div class="cart-item-counter">{{cartItems.length}}</div>
+              <div class="cart-items">
+                <div class="cart-item" ng-repeat="item in cartItems track by $index">
+                  <div class="cart-item-info">
+                    <div class="cart-item-type">{{ getTypeName(item) }}</div>
+                    <div class="cart-item-title">{{ item.getName() }}</div>
+                    <div class="cart-item-description">{{ item.getData().basketDescription }}</div>
+                  </div>
+                  <div class="cart-item-buttons">
+                    <div class="cart-item-price">{{ item.getTotal(cart.getPricingInfo()) | giCurrency:cart.getCurrencySymbol() }}</div>
+                    <div class="cart-item-delete" ng-click="cart.removeItem($index)">Remove</div>
+                  </div>
                 </div>
               </div>
             </div>
