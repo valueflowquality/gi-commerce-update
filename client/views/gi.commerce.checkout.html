@@ -44,7 +44,7 @@
           </div>
           <div class="confirm-total">
             <div class="confirm-total-title">Total</div>
-            <div class="confirm-total-price">{{ cart.totalCost(isTrial, true) | giCurrency:cart.getCurrencySymbol() }}</div>
+            <div class="confirm-total-price">{{ cart.totalCost(isTrial) | giCurrency:cart.getCurrencySymbol() }}</div>
           </div>
         </div>
         <div class="checkout-input-section">
@@ -424,7 +424,7 @@
                 <div class="confirm-description">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore. Lorem ipsum dolor sit amet, dolore.</div>
                 <div class="confirm-total">
                   <div class="confirm-total-title">Total</div>
-                  <div class="confirm-total-price">{{ cart.totalCost(isTrial, true) | giCurrency:cart.getCurrencySymbol() }}</div>
+                  <div class="confirm-total-price">{{ cart.totalCost(isTrial) | giCurrency:cart.getCurrencySymbol() }}</div>
                 </div>
               </div>
               <div class="purchase-button"
