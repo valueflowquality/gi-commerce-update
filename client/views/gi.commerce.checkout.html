@@ -67,7 +67,6 @@
                     ng-class="{'has-error': isPropertyValidationError('firstName'), 'has-success': isPropertyValidationSuccess('firstName')}">
                     <input class="form-control"
                       type="text"
-                      tabindex="1"
                       maxlength="50"
                       name="firstName"
                       ng-model="cart.customerInfo.firstName"
@@ -88,7 +87,6 @@
                     ng-class="{'has-error': isPropertyValidationError('lastName'), 'has-success': isPropertyValidationSuccess('lastName')}">
                     <input class="form-control"
                       type="text"
-                      tabindex="1"
                       name="lastName"
                       maxlength="50"
                       ng-model="cart.customerInfo.lastName"
@@ -113,7 +111,6 @@
                     ng-class="{'has-error': isPropertyValidationError('email'), 'has-success': isPropertyValidationSuccess('email')}">
                     <input class="form-control"
                       type="email"
-                      tabindex="1"
                       name="email"
                       maxlength="100"
                       placeholder="Email"
@@ -138,7 +135,6 @@
                     ng-class="{'has-error': isPropertyValidationError('password'), 'has-success': isPropertyValidationSuccess('password')}">
                     <input class="form-control"
                       type="password"
-                      tabindex="1"
                       maxlength="50"
                       name="password"
                       placeholder="Password"
@@ -160,14 +156,12 @@
                     ng-class="{'has-error': isPropertyValidationError('confirm'), 'has-success': isPropertyValidationSuccess('confirm')}">
                     <input class="form-control"
                       type="password"
-                      tabindex="1"
                       maxlength="50"
                       name="confirm"
                       ng-model="cart.customerInfo.confirm"
                       placeholder="Confirm Password"
                       gi-match="cart.customerInfo.password"
-                      ng-required="!model.me.loggedIn"
-                      tabindex="1"/><!--
+                      ng-required="!model.me.loggedIn"/><!--
                     --><div class="input-validity-indicator">
                       <div class="validity-icon">
                       </div>
@@ -196,9 +190,10 @@
             </div>
             <div class="form-group company-checkbox"
               ng-click="cart.business = !cart.business"
-              ng-class="{checked: cart.business}">
+              ng-class="{checked: cart.business}"
+              gi-enter="cart.business = !cart.business">
               <div class="checkbox checkbox-success">
-                <input type="checkbox" ng-model="cart.business">
+                <input type="checkbox" ng-model="cart.business" tabindex="-1">
                 <label unselectable="on" class="no-selection">Buying for a business?</label>
               </div>
             </div>
@@ -209,7 +204,6 @@
                     ng-class="{'has-error': isPropertyValidationError('companyName'), 'has-success': isPropertyValidationSuccess('companyName')}">
                     <input data-hj-suppress="" class="form-control"
                       type="text"
-                      tabindex="1"
                       maxlength="100"
                       name="companyName"
                       ng-model="cart.company.name"
@@ -230,7 +224,6 @@
                     ng-class="{'has-error': isPropertyValidationError('vat'), 'has-success': isPropertyValidationSuccess('vat')}">
                     <input class="form-control"
                       type="text"
-                      tabindex="1"
                       maxlength="50"
                       name="vat"
                       ng-model="cart.company.VAT"
@@ -288,7 +281,6 @@
                     ng-class="{'has-error': isPropertyValidationError('billing-line1'), 'has-success': isPropertyValidationSuccess('billing-line1')}">
                     <input class="form-control"
                       type="text"
-                      tabindex="1"
                       maxlength="100"
                       placeholder="Address line 1"
                       name="billing-line1"
@@ -308,7 +300,6 @@
                     ng-class="{'has-error': isPropertyValidationError('billing-line2'), 'has-success': isPropertyValidationSuccess('billing-line2')}">
                     <input class="form-control"
                       type="text"
-                      tabindex="1"
                       maxlength="100"
                       placeholder="Address line 2 (optional)"
                       name="billing-line2"
@@ -329,7 +320,6 @@
                     ng-class="{'has-error': isPropertyValidationError('billing-city'), 'has-success': isPropertyValidationSuccess('billing-city')}">
                     <input class="form-control"
                       type="text"
-                      tabindex="1"
                       maxlength="50"
                       name="billing-city"
                       placeholder="City"
@@ -350,7 +340,6 @@
                     ng-class="{'has-error': isPropertyValidationError('billing-state'), 'has-success': isPropertyValidationSuccess('billing-state')}">
                     <input class="form-control"
                       type="text"
-                      tabindex="1"
                       name="billing-state"
                       placeholder="State/Region (optional)"
                       maxlength="100"
@@ -367,7 +356,7 @@
               </div>
               <div class="checkout-input-row">
                 <div data-hj-suppress="" class="form-group error-container" ng-class="{'has-success': validCountry}">
-                  <ui-select class="checkout-select" tabindex="1" required on-select="checkValid($select.selected.name)" ng-model="cart.billingAddress.country">
+                  <ui-select class="checkout-select" required on-select="checkValid($select.selected.name)" ng-model="cart.billingAddress.country">
                     <ui-select-match placeholder="Country">{{$select.selected.name}}</ui-select-match>
                     <ui-select-choices repeat="t.code as t in model.countries | orderBy:getCountrySorter() | filter: $select.search">
                       <div ng-bind-html="t.name | highlight: $select.search"></div>
@@ -379,7 +368,6 @@
                     ng-class="{'has-error': isPropertyValidationError('billing-code'), 'has-success': isPropertyValidationSuccess('billing-code')}">
                     <input class="form-control"
                       type="text"
-                      tabindex="1"
                       name="billing-code"
                       placeholder="Postcode"
                       maxlength="10"
@@ -427,7 +415,8 @@
                   <div class="confirm-total-price">{{ cart.totalCost(isTrial) | giCurrency:cart.getCurrencySymbol() }}</div>
                 </div>
               </div>
-              <div class="purchase-button"
+              <div
+                class="purchase-button"
                 ng-click="purchase()"
                 gi-enter="purchase()"
                 ng-disabled="cart.isCheckoutFormInvalid() || isSpinnerShown">
