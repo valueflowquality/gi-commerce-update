@@ -252,8 +252,8 @@ angular.module('gi.commerce').directive 'giCheckout'
       if error.giPassword
         return "Must include 8 characters"
 
-      if error.giPassword
-        return "Password doesn't match"
+      if error.giMatch
+        return "Passwords don't match"
 
       return "Invalid value"
 
