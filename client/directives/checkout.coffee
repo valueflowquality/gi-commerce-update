@@ -1,6 +1,6 @@
 angular.module('gi.commerce').directive 'giCheckout'
-, ['giCart', 'usSpinnerService', 'Address', 'giPayment', '$modal', 'giUtil',  '$q', '$timeout', 'deviceDetector', '$location'
-, (Cart, Spinner, Address, Payment, $modal, Util, $q, $timeout, deviceDetector, $location) ->
+, ['giCart', 'usSpinnerService', 'Address', 'giPayment', '$modal', 'giUtil',  '$q', '$timeout', 'deviceDetector', '$location', 'Auth', '$http'
+, (Cart, Spinner, Address, Payment, $modal, Util, $q, $timeout, deviceDetector, $location, Auth, $http) ->
   restrict : 'E',
   scope:
     model: '='
@@ -86,6 +86,7 @@ angular.module('gi.commerce').directive 'giCheckout'
         Address.query({ userId: me.user._id }).then (addresses) ->
           $scope.cart.addresses = addresses
       else
+        Cart.setCustomer()
         $scope.isTrial = true
 
     $scope.$watch 'cartItems.length', () ->
@@ -182,7 +183,18 @@ angular.module('gi.commerce').directive 'giCheckout'
         $scope.showLoginModal()
 
     $scope.logout = () ->
-      $location.path('logout')
+      $scope.pricesLoaded = false
+      $http.get('/api/logout').then () ->
+        Auth.logout().then () ->
+          $scope.pricesLoaded = true
+        , (error) ->
+          console.log("The checkout logout failed", error)
+          $scope.$broadcast('giCart:paymentFailed', "The checkout logout failed, please refresh the page and try again, try using the header logout or get in touch with us at education@valueflowquality.com")
+          $scope.pricesLoaded = true
+      , (error) ->
+        console.log("The checkout logout failed", error)
+        $scope.$broadcast('giCart:paymentFailed', "The checkout logout failed, please refresh the page and try again, try using the header logout or get in touch with us at education@valueflowquality.com")
+        $scope.pricesLoaded = true
 
     $scope.showLoginModal = (size) ->
       modalInstance = $modal.open(
