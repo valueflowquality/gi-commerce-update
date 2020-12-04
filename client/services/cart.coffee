@@ -289,10 +289,11 @@ angular.module('gi.commerce').provider 'giCart', () ->
       setCustomer: (customer) ->
         @customer = customer
 
-        if @billingAddress? && !@billingAddress._id?
-          @saveAddress @billingAddress
-        if @shippingAddress && !@shippingAddress._id?
-          @saveAddress @shippingAddress
+        if customer
+          if @billingAddress? && !@billingAddress._id?
+            @saveAddress @billingAddress
+          if @shippingAddress && !@shippingAddress._id?
+            @saveAddress @shippingAddress
 
       getLastPurchase: () ->
         cart.lastPurchase
@@ -417,7 +418,6 @@ angular.module('gi.commerce').provider 'giCart', () ->
 
         deferred.promise
 
-      # Once item waiting is done for multiple Ids, add it here somewhere as well for this type of purchase
       handleItemPurchase: () ->
         that = @
         deferred = $q.defer()
