@@ -49,7 +49,6 @@ angular.module('gi.commerce').directive 'giCheckout'
     $scope.cart.billingAddress = {}
     $scope.isSpinnerShown = false
     $scope.inPayment = false
-    $scope.lastNameRegex = /(^[a-zA-Z]{2,}$)/
     $scope.isTrial = false
     $scope.pricesLoaded = false
     $scope.cartItems = $scope.cart.getItems()
@@ -237,14 +236,7 @@ angular.module('gi.commerce').directive 'giCheckout'
 
       if isInvalid
         error = $scope.checkoutForm[prop].$error
-
-        if prop is 'lastName'
-          if $scope.checkoutForm[prop].$viewValue and ($scope.checkoutForm[prop].$viewValue).includes(' ')
-            $scope.errorMessages[prop] = 'Must not include spaces'
-          else
-            $scope.errorMessages[prop] = 'Must include 2 letters'
-        else
-          $scope.errorMessages[prop] = getErrorMessage(error)
+        $scope.errorMessages[prop] = getErrorMessage(error)
 
       else
         $scope.errorMessages[prop] = ''
