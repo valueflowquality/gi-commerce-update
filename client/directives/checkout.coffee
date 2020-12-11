@@ -82,8 +82,6 @@ angular.module('gi.commerce').directive 'giCheckout'
         setPaymentDate()
         Cart.setCustomer(me.user)
         $scope.isTrial = !me.user.trialUsed
-        Address.query({ userId: me.user._id }).then (addresses) ->
-          $scope.cart.addresses = addresses
       else
         Cart.setCustomer()
         $scope.isTrial = true

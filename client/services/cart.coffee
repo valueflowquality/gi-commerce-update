@@ -274,26 +274,8 @@ angular.module('gi.commerce').provider 'giCart', () ->
 
       getPricingInfo: getPricingInfo
 
-      saveAddress: (address) ->
-        address.userId = @customer._id
-        required = (address.line1? and (address.line1 isnt "")) or
-        (address.city? and (address.line2 isnt "")) or
-        (address.postCode? and (address.postCode isnt ""))
-
-        if required
-          if address._id?
-            $http.put('/api/addresses/' + address._id, address)
-          else
-            $http.post('/api/addresses/', address)
-
       setCustomer: (customer) ->
         @customer = customer
-
-        if customer
-          if @billingAddress? && !@billingAddress._id?
-            @saveAddress @billingAddress
-          if @shippingAddress && !@shippingAddress._id?
-            @saveAddress @shippingAddress
 
       getLastPurchase: () ->
         cart.lastPurchase
@@ -388,12 +370,6 @@ angular.module('gi.commerce').provider 'giCart', () ->
               onPreparePayment()
           $rootScope.$broadcast('giCart:accountRequired', @customerInfo)
 
-        if @billingAddress && @customer
-          @saveAddress @billingAddress
-
-        if @shippingAddress && @customer
-          @saveAddress @shippingAddress
-
         if @customerInfo and @customer
           if cart.paymentType == 2
             onSubmitInvoice()
@@ -449,12 +425,6 @@ angular.module('gi.commerce').provider 'giCart', () ->
             that.setCustomer(me)
             deferred.resolve()
           $rootScope.$broadcast('giCart:accountRequired', @customerInfo)
-
-        if @billingAddress && @customer
-          @saveAddress @billingAddress
-
-        if @shippingAddress && @customer
-          @saveAddress @shippingAddress
 
         if !userRegistrationRequired
           deferred.resolve()
