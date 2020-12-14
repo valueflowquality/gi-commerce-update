@@ -63,7 +63,7 @@
             <div class="checkout-input-container">
               <div class="checkout-input-row">
                 <div class="form-group error-container">
-                  <div data-hj-suppress="" class="input-container"
+                  <div data-hj-suppress class="input-container"
                     ng-class="{'has-error': isPropertyValidationError('firstName'), 'has-success': isPropertyValidationSuccess('firstName')}">
                     <input class="form-control"
                       type="text"
@@ -83,7 +83,7 @@
                   </div>
                 </div>
                 <div class="form-group error-container">
-                  <div data-hj-suppress="" class="input-container"
+                  <div data-hj-suppress class="input-container"
                     ng-class="{'has-error': isPropertyValidationError('lastName'), 'has-success': isPropertyValidationSuccess('lastName')}">
                     <input class="form-control"
                       type="text"
@@ -106,7 +106,7 @@
               </div>
               <div class="checkout-input-row">
                 <div class="form-group error-container">
-                  <div data-hj-suppress="" class="input-container"
+                  <div data-hj-suppress class="input-container"
                     ng-class="{'has-error': isPropertyValidationError('email'), 'has-success': isPropertyValidationSuccess('email')}">
                     <input class="form-control"
                       type="email"
@@ -130,7 +130,7 @@
               </div>
               <div class="checkout-input-row">
                 <div class="form-group error-container">
-                  <div data-hj-suppress="" class="input-container"
+                  <div data-hj-suppress class="input-container"
                     ng-class="{'has-error': isPropertyValidationError('password'), 'has-success': isPropertyValidationSuccess('password')}">
                     <input class="form-control"
                       type="password"
@@ -151,7 +151,7 @@
                   </div>
                 </div>
                 <div class="form-group error-container">
-                  <div data-hj-suppress="" class="input-container"
+                  <div data-hj-suppress class="input-container"
                     ng-class="{'has-error': isPropertyValidationError('confirm'), 'has-success': isPropertyValidationSuccess('confirm')}">
                     <input class="form-control"
                       type="password"
@@ -176,8 +176,8 @@
           </div>
           <div class="checkout-welcome-back" ng-if="model.me.loggedIn">
             <div class="welcome-back-text">
-              <div class="welcome-back-title">Welcome back, {{ model.me.user.firstName }}</div>
-              <div class="welcome-back-email">{{ model.me.user.email }}</div>
+              <div class="welcome-back-title" data-hj-suppress>Welcome back, {{ model.me.user.firstName }}</div>
+              <div class="welcome-back-email" data-hj-suppress>{{ model.me.user.email }}</div>
             </div>
             <div ng-click="logout()" class="sign-out-button">
               SIGN OUT
@@ -201,7 +201,7 @@
                 <div class="form-group error-container">
                   <div class="input-container"
                     ng-class="{'has-error': isPropertyValidationError('companyName'), 'has-success': isPropertyValidationSuccess('companyName')}">
-                    <input data-hj-suppress="" class="form-control"
+                    <input data-hj-suppress class="form-control"
                       type="text"
                       maxlength="100"
                       name="companyName"
@@ -219,7 +219,7 @@
                   </div>
                 </div>
                 <div class="form-group error-container">
-                  <div data-hj-suppress="" class="input-container"
+                  <div data-hj-suppress class="input-container"
                     ng-class="{'has-error': isPropertyValidationError('vat'), 'has-success': isPropertyValidationSuccess('vat')}">
                     <input class="form-control"
                       type="text"
@@ -240,7 +240,7 @@
                 </div>
               </div>
               <div class="checkout-input-row">
-                <div class="checkout-card-wrapper" data-hj-suppress=""
+                <div class="checkout-card-wrapper" data-hj-suppress
                   ng-class="{'has-error': cart.isCardElementFormValid() == false, 'has-success': cart.isCardElementFormValid() == true}">
                   <div id="checkout-card-container"></div><!--
                     --><div class="input-validity-indicator">
@@ -251,7 +251,7 @@
               </div>
               <!-- <div class="checkout-input-row">
                 <div class="form-group">
-                  <div data-hj-suppress="" class="input-container"
+                  <div data-hj-suppress class="input-container"
                     ng-class="{'has-error': isPropertyValidationError('couponCode'), 'has-success': isPropertyValidationSuccess('couponCode')}">
                     <input class="form-control"
                       type="text"
@@ -276,7 +276,7 @@
             <div class="checkout-input-container">
               <div class="checkout-input-row">
                 <div class="form-group error-container">
-                  <div data-hj-suppress="" class="input-container"
+                  <div data-hj-suppress class="input-container"
                     ng-class="{'has-error': isPropertyValidationError('billing-line1'), 'has-success': isPropertyValidationSuccess('billing-line1')}">
                     <input class="form-control"
                       type="text"
@@ -295,7 +295,7 @@
                   </div>
                 </div>
                 <div class="form-group error-container">
-                  <div data-hj-suppress="" class="input-container"
+                  <div data-hj-suppress class="input-container"
                     ng-class="{'has-error': isPropertyValidationError('billing-line2'), 'has-success': isPropertyValidationSuccess('billing-line2')}">
                     <input class="form-control"
                       type="text"
@@ -315,7 +315,7 @@
               </div>
               <div class="checkout-input-row">
                 <div class="form-group error-container">
-                  <div data-hj-suppress="" class="input-container"
+                  <div data-hj-suppress class="input-container"
                     ng-class="{'has-error': isPropertyValidationError('billing-city'), 'has-success': isPropertyValidationSuccess('billing-city')}">
                     <input class="form-control"
                       type="text"
@@ -335,7 +335,7 @@
                   </div>
                 </div>
                 <div class="form-group error-container">
-                  <div data-hj-suppress="" class="input-container"
+                  <div data-hj-suppress class="input-container"
                     ng-class="{'has-error': isPropertyValidationError('billing-state'), 'has-success': isPropertyValidationSuccess('billing-state')}">
                     <input class="form-control"
                       type="text"
@@ -354,7 +354,7 @@
                 </div>
               </div>
               <div class="checkout-input-row">
-                <div data-hj-suppress="" class="form-group error-container" ng-class="{'has-success': validCountry}">
+                <div data-hj-suppress class="form-group error-container" ng-class="{'has-success': validCountry}">
                   <ui-select class="checkout-select" required on-select="checkValid($select.selected.name)" ng-model="cart.billingAddress.country">
                     <ui-select-match placeholder="Country">{{$select.selected.name}}</ui-select-match>
                     <ui-select-choices repeat="t.code as t in model.countries | orderBy:getCountrySorter() | filter: $select.search">
@@ -363,7 +363,7 @@
                   </ui-select>
                 </div>
                 <div class="form-group error-container">
-                  <div data-hj-suppress="" class="input-container"
+                  <div data-hj-suppress class="input-container"
                     ng-class="{'has-error': isPropertyValidationError('billing-code'), 'has-success': isPropertyValidationSuccess('billing-code')}">
                     <input class="form-control"
                       type="text"
