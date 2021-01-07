@@ -44,7 +44,43 @@ angular.module('gi.commerce').factory 'giEcommerceAnalytics'
       ga('ec:setAction', 'checkout', obj)
       ga('send', 'pageview')
 
+  checkOut: (items) ->
+    inCartProducts = []
 
+    products = []
+
+    if items? && items.length > 0
+      for i in items
+        prod =
+          id: i._data.id,
+          name: i._name,
+          quantity: i._quantity
+
+        products.push prod
+
+      gtag('event', 'begin_checkout', {
+        items: products
+      });
+
+  addToCart: (item) ->
+    inCartProducts = []
+
+    if google?
+      if not enhancedEcommerce
+        requireGaPlugin 'ec'
+
+      message = ""
+
+      if item?
+        message = item._name + " was added to the cart"
+        prod =
+          id: item._data.id,
+          name: item._name,
+          quantity: item._quantity
+
+        gtag('event', 'add_to_cart', {
+          "items": [ prod ]
+        });
 
   sendTransaction: (obj , items) ->
     id = ''
@@ -55,24 +91,23 @@ angular.module('gi.commerce').factory 'giEcommerceAnalytics'
       i++
 
     rev = 0
-    if google?
-      if not enhancedEcommerce
-        requireGaPlugin 'ec'
+    products = []
 
     if items?
       for i in items
         rev += parseFloat(i._priceList?.prices?.US)
         prod =
-          id: i._data.name,
-          name: i._data.displayName,
-          price: "'" + i._priceList?.prices?.US  + "'" || ''
+          id: i._data.id,
+          name: i._name,
+          price: '' + i._priceList?.prices?.US || ''
           quantity: i._quantity
-        ga('ec:addProduct', prod)
+        products.push prod
 
-    ga('ec:setAction', 'purchase', {id: id, revenue: rev})
-    # ga('send', 'pageview')
-    ga('send', 'event', 'Ecommerce', 'Purchase');
-
-
-
+    gtag('event', 'purchase', {
+      transaction_id: id,
+      affiliation: "VFQ store",
+      value: rev,
+      currency: "USD",
+      items: products
+    })
 ]

@@ -59,6 +59,7 @@ angular.module('gi.commerce').directive 'giCheckout'
 
     $timeout ( ()->
       $scope.pricesLoaded = true
+      $scope.cart.sendCheckOut()
     ), 1000
 
     setPaymentDate = () ->
