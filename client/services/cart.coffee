@@ -158,6 +158,7 @@ angular.module('gi.commerce').provider 'giCart', () ->
         else
           newItem = new giCartItem(id, name, priceList, quantity, data)
           cart.items.push(newItem)
+          giEcommerceAnalytics.addToCart(newItem)
           $rootScope.$broadcast('giCart:itemAdded', newItem)
 
         $rootScope.$broadcast('giCart:change', {})
@@ -448,7 +449,7 @@ angular.module('gi.commerce').provider 'giCart', () ->
           ).then( (result) ->
             if result.paymentIntent
               $rootScope.$broadcast('giCart:paymentCompleted')
-              giEcommerceAnalytics.sendTransaction({ step: 4, option: 'Transaction Complete'}, cart.items)
+              giEcommerceAnalytics.sendTransaction({ option: 'Transaction Complete'}, cart.items)
               assetIds = [item._data._id] for item in cart.items
               that.waitForAssets(assetIds).then () ->
                 that.empty()
@@ -733,8 +734,10 @@ angular.module('gi.commerce').provider 'giCart', () ->
 
 
       sendCart: (opt) ->
-        giEcommerceAnalytics.sendCartView({ step: cart.stage, option: opt}, cart.items)
+        giEcommerceAnalytics.sendCartView({ option: opt }, cart.items)
 
+      sendCheckOut: () ->
+        giEcommerceAnalytics.checkOut(cart.items)
 
       restore: (storedCart) ->
         init()

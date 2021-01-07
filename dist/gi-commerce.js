@@ -345,7 +345,8 @@ angular.module('gi.commerce').directive('giCheckout', [
         $scope.itemDiscountInCart = false;
         $scope.errorMessages = [];
         $timeout((function() {
-          return $scope.pricesLoaded = true;
+          $scope.pricesLoaded = true;
+          return $scope.cart.sendCheckOut();
         }), 1000);
         setPaymentDate = function() {
           var ref, ref1, ref2;
@@ -1242,6 +1243,57 @@ angular.module('gi.security').directive('giVat', [
   }
 ]);
 
+angular.module('gi.commerce').filter('giCurrency', [
+  '$filter', function($filter) {
+    return function(amount, currencySymbol, fractionSize) {
+      if (angular.isFunction(currencySymbol)) {
+        currencySymbol = currencySymbol();
+      }
+      return $filter('currency')(amount, currencySymbol, fractionSize);
+    };
+  }
+]);
+
+angular.module('gi.commerce').filter('giCurrencyId', [
+  'giCurrency', function(Currency) {
+    return function(currencyId) {
+      var cur, result;
+      result = "N/A";
+      if (currencyId != null) {
+        cur = Currency.getCached(currencyId);
+        if (cur != null) {
+          result = cur.symbol + ' ' + cur.code;
+        }
+      }
+      return result;
+    };
+  }
+]);
+
+angular.module('gi.commerce').filter('giMarketId', [
+  'giMarket', function(Model) {
+    return function(id) {
+      var cur, result;
+      result = "N/A";
+      if (id != null) {
+        cur = Model.getCached(id);
+        if (cur != null) {
+          result = cur.code;
+        }
+      }
+      return result;
+    };
+  }
+]);
+
+angular.module('gi.commerce').filter('roundUp', [
+  '$filter', function() {
+    return function(number) {
+      return Math.ceil(number);
+    };
+  }
+]);
+
 angular.module('gi.commerce').factory('Address', [
   'giCrud', function(Crud) {
     return Crud.factory('Addresses');
@@ -1563,6 +1615,7 @@ angular.module('gi.commerce').provider('giCart', function() {
           } else {
             newItem = new giCartItem(id, name, priceList, quantity, data);
             cart.items.push(newItem);
+            giEcommerceAnalytics.addToCart(newItem);
             $rootScope.$broadcast('giCart:itemAdded', newItem);
           }
           return $rootScope.$broadcast('giCart:change', {});
@@ -1870,7 +1923,6 @@ angular.module('gi.commerce').provider('giCart', function() {
               if (result.paymentIntent) {
                 $rootScope.$broadcast('giCart:paymentCompleted');
                 giEcommerceAnalytics.sendTransaction({
-                  step: 4,
                   option: 'Transaction Complete'
                 }, cart.items);
                 ref = cart.items;
@@ -2228,9 +2280,11 @@ angular.module('gi.commerce').provider('giCart', function() {
         save: save,
         sendCart: function(opt) {
           return giEcommerceAnalytics.sendCartView({
-            step: cart.stage,
             option: opt
           }, cart.items);
+        },
+        sendCheckOut: function() {
+          return giEcommerceAnalytics.checkOut(cart.items);
         },
         restore: function(storedCart) {
           init();
@@ -2484,8 +2538,48 @@ angular.module('gi.commerce').factory('giEcommerceAnalytics', [
           return ga('send', 'pageview');
         }
       },
+      checkOut: function(items) {
+        var i, inCartProducts, j, len, prod, products;
+        inCartProducts = [];
+        products = [];
+        if ((items != null) && items.length > 0) {
+          for (j = 0, len = items.length; j < len; j++) {
+            i = items[j];
+            prod = {
+              id: i._data.id,
+              name: i._name,
+              quantity: i._quantity
+            };
+            products.push(prod);
+          }
+          return gtag('event', 'begin_checkout', {
+            items: products
+          });
+        }
+      },
+      addToCart: function(item) {
+        var inCartProducts, message, prod;
+        inCartProducts = [];
+        if (google != null) {
+          if (!enhancedEcommerce) {
+            requireGaPlugin('ec');
+          }
+          message = "";
+          if (item != null) {
+            message = item._name + " was added to the cart";
+            prod = {
+              id: item._data.id,
+              name: item._name,
+              quantity: item._quantity
+            };
+            return gtag('event', 'add_to_cart', {
+              "items": [prod]
+            });
+          }
+        }
+      },
       sendTransaction: function(obj, items) {
-        var i, id, j, len, possible, prod, ref, ref1, ref2, ref3, rev;
+        var i, id, j, len, possible, prod, products, ref, ref1, ref2, ref3, rev;
         id = '';
         possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
         i = 0;
@@ -2494,29 +2588,27 @@ angular.module('gi.commerce').factory('giEcommerceAnalytics', [
           i++;
         }
         rev = 0;
-        if (google != null) {
-          if (!enhancedEcommerce) {
-            requireGaPlugin('ec');
-          }
-        }
+        products = [];
         if (items != null) {
           for (j = 0, len = items.length; j < len; j++) {
             i = items[j];
             rev += parseFloat((ref = i._priceList) != null ? (ref1 = ref.prices) != null ? ref1.US : void 0 : void 0);
             prod = {
-              id: i._data.name,
-              name: i._data.displayName,
-              price: "'" + ((ref2 = i._priceList) != null ? (ref3 = ref2.prices) != null ? ref3.US : void 0 : void 0) + "'" || '',
+              id: i._data.id,
+              name: i._name,
+              price: '' + ((ref2 = i._priceList) != null ? (ref3 = ref2.prices) != null ? ref3.US : void 0 : void 0) || '',
               quantity: i._quantity
             };
-            ga('ec:addProduct', prod);
+            products.push(prod);
           }
         }
-        ga('ec:setAction', 'purchase', {
-          id: id,
-          revenue: rev
+        return gtag('event', 'purchase', {
+          transaction_id: id,
+          affiliation: "VFQ store",
+          value: rev,
+          currency: "USD",
+          items: products
         });
-        return ga('send', 'event', 'Ecommerce', 'Purchase');
       }
     };
   }
@@ -2836,57 +2928,6 @@ angular.module('gi.commerce').factory('giProduct', [
       save: save,
       destroy: crudService.destroy,
       forCategory: forCategory
-    };
-  }
-]);
-
-angular.module('gi.commerce').filter('giCurrency', [
-  '$filter', function($filter) {
-    return function(amount, currencySymbol, fractionSize) {
-      if (angular.isFunction(currencySymbol)) {
-        currencySymbol = currencySymbol();
-      }
-      return $filter('currency')(amount, currencySymbol, fractionSize);
-    };
-  }
-]);
-
-angular.module('gi.commerce').filter('giCurrencyId', [
-  'giCurrency', function(Currency) {
-    return function(currencyId) {
-      var cur, result;
-      result = "N/A";
-      if (currencyId != null) {
-        cur = Currency.getCached(currencyId);
-        if (cur != null) {
-          result = cur.symbol + ' ' + cur.code;
-        }
-      }
-      return result;
-    };
-  }
-]);
-
-angular.module('gi.commerce').filter('giMarketId', [
-  'giMarket', function(Model) {
-    return function(id) {
-      var cur, result;
-      result = "N/A";
-      if (id != null) {
-        cur = Model.getCached(id);
-        if (cur != null) {
-          result = cur.code;
-        }
-      }
-      return result;
-    };
-  }
-]);
-
-angular.module('gi.commerce').filter('roundUp', [
-  '$filter', function() {
-    return function(number) {
-      return Math.ceil(number);
     };
   }
 ]);
