@@ -425,7 +425,12 @@ angular.module('gi.commerce').provider 'giCart', () ->
           $rootScope.$on 'event:auth-login-complete', (e, me) ->
             that.setCustomer(me)
             deferred.resolve()
-          $rootScope.$broadcast('giCart:accountRequired', @customerInfo)
+          registrationObject = Object.assign({}, @customerInfo)
+
+          if @billingAddress.country
+            registrationObject.countryCode = @billingAddress.country
+
+          $rootScope.$broadcast('giCart:accountRequired', registrationObject)
 
         if !userRegistrationRequired
           deferred.resolve()
