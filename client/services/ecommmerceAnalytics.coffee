@@ -78,16 +78,16 @@ angular.module('gi.commerce').factory 'giEcommerceAnalytics'
           name: item._name,
           quantity: item._quantity
 
-        gtag('event', 'add_to_cart', {
-          "items": [ prod ]
-        });
-
         if heap && typeof heap.track == "function"
           heap.track('add_to_cart', {
             id: item._data._id,
             name: item._name,
             quantity: item._quantity
           })
+
+        gtag('event', 'add_to_cart', {
+          "items": [ prod ]
+        });
 
   sendTransaction: (obj , items) ->
     id = ''
@@ -113,14 +113,6 @@ angular.module('gi.commerce').factory 'giEcommerceAnalytics'
 
         productIds += i._data._id + ';'
 
-    gtag('event', 'purchase', {
-      transaction_id: id,
-      affiliation: "VFQ store",
-      value: rev,
-      currency: "USD",
-      items: products
-    })
-
     if heap && typeof heap.track == "function"
       purchase = {
         affiliation: "VFQ store",
@@ -132,4 +124,12 @@ angular.module('gi.commerce').factory 'giEcommerceAnalytics'
         purchase.items = productIds
 
       heap.track('purchase', purchase)
+
+    gtag('event', 'purchase', {
+      transaction_id: id,
+      affiliation: "VFQ store",
+      value: rev,
+      currency: "USD",
+      items: products
+    })
 ]
