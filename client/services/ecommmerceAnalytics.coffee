@@ -78,6 +78,13 @@ angular.module('gi.commerce').factory 'giEcommerceAnalytics'
           name: item._name,
           quantity: item._quantity
 
+        if heap && typeof heap.track == "function"
+          heap.track('add_to_cart', {
+            id: item._data._id,
+            name: item._name,
+            quantity: item._quantity
+          })
+
         gtag('event', 'add_to_cart', {
           "items": [ prod ]
         });
@@ -92,6 +99,7 @@ angular.module('gi.commerce').factory 'giEcommerceAnalytics'
 
     rev = 0
     products = []
+    productIds = ""
 
     if items?
       for i in items
@@ -102,6 +110,20 @@ angular.module('gi.commerce').factory 'giEcommerceAnalytics'
           price: '' + i._priceList?.prices?.US || ''
           quantity: i._quantity
         products.push prod
+
+        productIds += i._data._id + ';'
+
+    if heap && typeof heap.track == "function"
+      purchase = {
+        affiliation: "VFQ store",
+        value: rev,
+        currency: "USD"
+      }
+
+      if productIds
+        purchase.items = productIds
+
+      heap.track('purchase', purchase)
 
     gtag('event', 'purchase', {
       transaction_id: id,

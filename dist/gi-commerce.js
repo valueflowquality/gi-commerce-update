@@ -2576,6 +2576,13 @@ angular.module('gi.commerce').factory('giEcommerceAnalytics', [
               name: item._name,
               quantity: item._quantity
             };
+            if (heap && typeof heap.track === "function") {
+              heap.track('add_to_cart', {
+                id: item._data._id,
+                name: item._name,
+                quantity: item._quantity
+              });
+            }
             return gtag('event', 'add_to_cart', {
               "items": [prod]
             });
@@ -2583,7 +2590,7 @@ angular.module('gi.commerce').factory('giEcommerceAnalytics', [
         }
       },
       sendTransaction: function(obj, items) {
-        var i, id, j, len, possible, prod, products, ref, ref1, ref2, ref3, rev;
+        var i, id, j, len, possible, prod, productIds, products, purchase, ref, ref1, ref2, ref3, rev;
         id = '';
         possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
         i = 0;
@@ -2593,6 +2600,7 @@ angular.module('gi.commerce').factory('giEcommerceAnalytics', [
         }
         rev = 0;
         products = [];
+        productIds = "";
         if (items != null) {
           for (j = 0, len = items.length; j < len; j++) {
             i = items[j];
@@ -2604,7 +2612,19 @@ angular.module('gi.commerce').factory('giEcommerceAnalytics', [
               quantity: i._quantity
             };
             products.push(prod);
+            productIds += i._data._id + ';';
           }
+        }
+        if (heap && typeof heap.track === "function") {
+          purchase = {
+            affiliation: "VFQ store",
+            value: rev,
+            currency: "USD"
+          };
+          if (productIds) {
+            purchase.items = productIds;
+          }
+          heap.track('purchase', purchase);
         }
         return gtag('event', 'purchase', {
           transaction_id: id,
