@@ -1,7 +1,7 @@
 {
   "author": "Intellica Group",
   "name": "gi-commerce-updated",
-  "version": "0.8.58",
+  "version": "0.8.59",
   "main": "./server/index.coffee",
   "scripts": {},
   "repository": {
