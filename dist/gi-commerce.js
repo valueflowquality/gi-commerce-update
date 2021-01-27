@@ -2599,9 +2599,6 @@ angular.module('gi.commerce').factory('giEcommerceAnalytics', [
         rev = 0;
         products = [];
         productIds = "";
-        if (!marketCode) {
-          marketCode = "US";
-        }
         if (items != null) {
           for (j = 0, len = items.length; j < len; j++) {
             i = items[j];

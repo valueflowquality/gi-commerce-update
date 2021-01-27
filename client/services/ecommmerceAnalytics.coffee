@@ -98,9 +98,6 @@ angular.module('gi.commerce').factory 'giEcommerceAnalytics'
     products = []
     productIds = ""
 
-    if !marketCode
-      marketCode = "US"
-
     if items?
       for i in items
         itemPrice = 0
