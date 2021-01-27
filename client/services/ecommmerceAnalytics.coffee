@@ -65,31 +65,28 @@ angular.module('gi.commerce').factory 'giEcommerceAnalytics'
   addToCart: (item) ->
     inCartProducts = []
 
-    if google?
-      if not enhancedEcommerce
-        requireGaPlugin 'ec'
+    if item?
+      if heap && typeof heap.track == "function"
+        heap.track('add_to_cart', {
+          id: item._data._id,
+          name: item._name,
+          quantity: item._quantity
+        })
 
-      message = ""
+      if google?
+        if not enhancedEcommerce
+          requireGaPlugin 'ec'
 
-      if item?
-        message = item._name + " was added to the cart"
         prod =
           id: item._data.id,
           name: item._name,
           quantity: item._quantity
 
-        if heap && typeof heap.track == "function"
-          heap.track('add_to_cart', {
-            id: item._data._id,
-            name: item._name,
-            quantity: item._quantity
-          })
-
         gtag('event', 'add_to_cart', {
           "items": [ prod ]
         });
 
-  sendTransaction: (obj , items) ->
+  sendTransaction: (obj , items, marketCode, currency) ->
     id = ''
     possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
     i = 0
@@ -101,14 +98,27 @@ angular.module('gi.commerce').factory 'giEcommerceAnalytics'
     products = []
     productIds = ""
 
+    if !marketCode
+      marketCode = "US"
+
     if items?
       for i in items
-        rev += parseFloat(i._priceList?.prices?.US)
+        itemPrice = 0
+        if marketCode
+          itemPrice = i._priceList?.prices?[marketCode]
+
         prod =
           id: i._data.id,
           name: i._name,
-          price: '' + i._priceList?.prices?.US || ''
-          quantity: i._quantity
+          quantity: i._quantity,
+          currency: currency
+
+        if itemPrice
+          prod.price = '' + itemPrice
+          rev += parseFloat(itemPrice)
+        else
+          prod.price = ''
+
         products.push prod
 
         productIds += i._data._id + ';'
@@ -117,7 +127,7 @@ angular.module('gi.commerce').factory 'giEcommerceAnalytics'
       purchase = {
         affiliation: "VFQ store",
         value: rev,
-        currency: "USD"
+        currency: currency
       }
 
       if productIds
@@ -129,7 +139,7 @@ angular.module('gi.commerce').factory 'giEcommerceAnalytics'
       transaction_id: id,
       affiliation: "VFQ store",
       value: rev,
-      currency: "USD",
+      currency: currency,
       items: products
     })
 ]
