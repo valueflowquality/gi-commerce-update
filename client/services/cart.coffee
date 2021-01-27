@@ -454,7 +454,7 @@ angular.module('gi.commerce').provider 'giCart', () ->
           ).then( (result) ->
             if result.paymentIntent
               $rootScope.$broadcast('giCart:paymentCompleted')
-              giEcommerceAnalytics.sendTransaction({ option: 'Transaction Complete'}, cart.items)
+              giEcommerceAnalytics.sendTransaction({ option: 'Transaction Complete'}, cart.items, cart.market.code, cart.currency.code)
               assetIds = [item._data._id] for item in cart.items
               that.waitForAssets(assetIds).then () ->
                 that.empty()
@@ -486,7 +486,7 @@ angular.module('gi.commerce').provider 'giCart', () ->
             if result.paymentMethod
               that.submitSubscriptionRequest(result.paymentMethod).then( () ->
                 $rootScope.$broadcast('giCart:paymentCompleted')
-                giEcommerceAnalytics.sendTransaction({ step: 4, option: 'Transaction Complete'}, cart.items)
+                giEcommerceAnalytics.sendTransaction({ step: 4, option: 'Transaction Complete'}, cart.items, cart.market.code, cart.currency.code)
                 # TODO: make it wait for all assets involved
                 assetIds = [item._data._id] for item in cart.items
                 that.waitForAssets(assetIds).then(
@@ -718,7 +718,7 @@ angular.module('gi.commerce').provider 'giCart', () ->
       makeCharge: (chargeRequest, that) ->
         Payment.stripe.charge(chargeRequest).then (result) ->
           $rootScope.$broadcast('giCart:paymentCompleted')
-          giEcommerceAnalytics.sendTransaction({ step: 4, option: 'Transaction Complete'}, cart.items)
+          giEcommerceAnalytics.sendTransaction({ step: 4, option: 'Transaction Complete'}, cart.items, cart.market.code, cart.currency.code)
           that.empty()
           cart.stage = 4
         , (err) ->
