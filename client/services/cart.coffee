@@ -457,8 +457,12 @@ angular.module('gi.commerce').provider 'giCart', () ->
               giEcommerceAnalytics.sendTransaction({ option: 'Transaction Complete'}, cart.items, cart.market.code, cart.currency.code)
               assetIds = [item._data._id] for item in cart.items
               that.waitForAssets(assetIds).then () ->
+                assetRedirectInfo = [];
+                for item in cart.items
+                  assetRedirectInfo.push({redirectUrl: item._data.redirectUrl, redirectPriority: item._data.redirectPriority})
+
                 that.empty()
-                that.redirectUser()
+                that.redirectUser(assetRedirectInfo)
                 deferred.resolve()
               , (err) ->
                 that.empty()
@@ -491,8 +495,12 @@ angular.module('gi.commerce').provider 'giCart', () ->
                 assetIds = [item._data._id] for item in cart.items
                 that.waitForAssets(assetIds).then(
                   () ->
+                    assetRedirectInfo = [];
+                    for item in cart.items
+                      assetRedirectInfo.push({redirectUrl: item._data.redirectUrl, redirectPriority: item._data.redirectPriority})
+
                     that.empty()
-                    that.redirectUser()
+                    that.redirectUser(assetRedirectInfo)
                     deferred.resolve()
                   , (err) ->
                     that.empty()
@@ -627,8 +635,28 @@ angular.module('gi.commerce').provider 'giCart', () ->
 
         return $http.get(url)
 
-      redirectUser: () ->
-        $window.location.href = "/welcome"
+      redirectUser: (redirectInfo) ->
+        if !redirectInfo?.length > 0
+          $window.location.href = "/welcome";
+        else
+          highestPriorityRedirect = undefined;
+
+          for redirect in redirectInfo
+            if !redirect.redirectPriority
+              redirect.redirectPriority = 0;
+
+            if !highestPriorityRedirect || highestPriorityRedirect.redirectPriority < redirect.redirectPriority
+              highestPriorityRedirect = redirect;
+
+          if !highestPriorityRedirect.redirectUrl
+            $window.location.href = "/welcome";
+          else
+            # Some additional redirect protections
+            highestPriorityRedirect.redirectUrl = highestPriorityRedirect.redirectUrl.replace(/[^a-zA-Z0-9-\/.]/g, "")
+            if highestPriorityRedirect.redirectUrl.match(/^\/(?!\/).*/)
+              $window.location.href = highestPriorityRedirect.redirectUrl;
+            else
+              $window.location.href = "/welcome";
 
       preparePayment: (cart, callback) ->
         that = @
