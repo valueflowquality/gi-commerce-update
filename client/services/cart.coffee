@@ -425,6 +425,11 @@ angular.module('gi.commerce').provider 'giCart', () ->
           $rootScope.$on 'event:auth-login-complete', (e, me) ->
             that.setCustomer(me)
             deferred.resolve()
+
+          $rootScope.$on 'event:accountRequired-failed', (e, err) ->
+            $rootScope.$broadcast('giCart:paymentFailed', err)
+            deferred.reject()
+
           registrationObject = Object.assign({}, @customerInfo)
 
           if @billingAddress.country
