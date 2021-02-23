@@ -1,6 +1,6 @@
 angular.module('gi.commerce').directive 'giCheckout'
-, ['giCart', 'usSpinnerService', 'Address', 'giPayment', '$modal', 'giUtil',  '$q', '$timeout', 'deviceDetector', '$location', 'Auth', '$http'
-, (Cart, Spinner, Address, Payment, $modal, Util, $q, $timeout, deviceDetector, $location, Auth, $http) ->
+, ['giCart', 'usSpinnerService', 'Address', 'giPayment', '$modal', 'giUtil',  '$q', '$timeout', 'deviceDetector', '$location', 'Auth', '$http', 'giPriceList'
+, (Cart, Spinner, Address, Payment, $modal, Util, $q, $timeout, deviceDetector, $location, Auth, $http, PriceList) ->
   restrict : 'E',
   scope:
     model: '='
@@ -113,13 +113,19 @@ angular.module('gi.commerce').directive 'giCheckout'
     processItemDiscount = () ->
       Cart.setItemDiscountApplied($scope.itemDiscountInCart || $scope.discountItemOwned)
 
-    $scope.$watch 'model.assets[0].owned', () ->
+    $scope.$watch 'model.assets[0]._id', () ->
       itemDiscountFound = false
       if $scope.model.assets
         for asset in $scope.model.assets
           if asset.owned && asset.appliesItemDiscount
             $scope.discountItemOwned = true
             itemDiscountFound = true
+
+          for item in $scope.cartItems
+            if item._data._id == asset._id
+              item.setData asset
+              item.setName asset.displayName
+              item.setPriceList PriceList.getCached(asset.priceId)
 
       if !itemDiscountFound
         $scope.discountItemOwned = false
