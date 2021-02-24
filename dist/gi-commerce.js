@@ -286,7 +286,7 @@ angular.module('gi.commerce').directive('giCartSummary', [
 var indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
 angular.module('gi.commerce').directive('giCheckout', [
-  'giCart', 'usSpinnerService', 'Address', 'giPayment', '$modal', 'giUtil', '$q', '$timeout', 'deviceDetector', '$location', 'Auth', '$http', function(Cart, Spinner, Address, Payment, $modal, Util, $q, $timeout, deviceDetector, $location, Auth, $http) {
+  'giCart', 'usSpinnerService', 'Address', 'giPayment', '$modal', 'giUtil', '$q', '$timeout', 'deviceDetector', '$location', 'Auth', '$http', 'giPriceList', function(Cart, Spinner, Address, Payment, $modal, Util, $q, $timeout, deviceDetector, $location, Auth, $http, PriceList) {
     return {
       restrict: 'E',
       scope: {
@@ -404,17 +404,63 @@ angular.module('gi.commerce').directive('giCheckout', [
         processItemDiscount = function() {
           return Cart.setItemDiscountApplied($scope.itemDiscountInCart || $scope.discountItemOwned);
         };
-        $scope.$watch('model.assets[0].owned', function() {
-          var asset, i, itemDiscountFound, len, ref;
+        $scope.$watch('model.assets[0]._id', function() {
+          var asset, cartItemsPresent, i, index, item, itemDiscountFound, itemsToRemove, j, k, l, len, len1, len2, len3, len4, m, ref, ref1, ref2, ref3, ref4, ref5, ref6, removalMessage, removeIndex, removedItemString;
           itemDiscountFound = false;
           if ($scope.model.assets) {
-            ref = $scope.model.assets;
-            for (i = 0, len = ref.length; i < len; i++) {
-              asset = ref[i];
+            removedItemString = "";
+            itemsToRemove = [];
+            cartItemsPresent = ((ref = $scope.cartItems) != null ? ref.length : void 0) > 0;
+            if (cartItemsPresent) {
+              ref2 = ((ref1 = $scope.cartItems) != null ? ref1.length : void 0) > 0;
+              for (i = 0, len = ref2.length; i < len; i++) {
+                item = ref2[i];
+                item.present = false;
+              }
+            }
+            ref3 = $scope.model.assets;
+            for (j = 0, len1 = ref3.length; j < len1; j++) {
+              asset = ref3[j];
               if (asset.owned && asset.appliesItemDiscount) {
                 $scope.discountItemOwned = true;
                 itemDiscountFound = true;
               }
+              if (cartItemsPresent) {
+                ref4 = $scope.cartItems;
+                for (k = 0, len2 = ref4.length; k < len2; k++) {
+                  item = ref4[k];
+                  if (item._data._id === asset._id) {
+                    item.setData(asset);
+                    item.setName(asset.displayName);
+                    item.setPriceList(PriceList.getCached(asset.priceId));
+                    item.present = true;
+                  }
+                }
+              }
+            }
+            if (cartItemsPresent) {
+              ref5 = $scope.cartItems;
+              for (index = l = 0, len3 = ref5.length; l < len3; index = ++l) {
+                item = ref5[index];
+                if (!item.present) {
+                  removedItemString += ", " + item.getName();
+                  itemsToRemove.push(index);
+                }
+              }
+            }
+            if (itemsToRemove.length > 0) {
+              ref6 = itemsToRemove.reverse();
+              for (m = 0, len4 = ref6.length; m < len4; m++) {
+                removeIndex = ref6[m];
+                $scope.cart.removeItem(removeIndex);
+              }
+              removedItemString = removedItemString.substring(2);
+              if (itemsToRemove.length > 1) {
+                removalMessage = "The information about items " + removedItemString + " could not be found and the items have been removed from your cart.";
+              } else {
+                removalMessage = "The information about the item " + removedItemString + " could not be found and the item has been removed from your cart.";
+              }
+              $scope.errorMessage = removalMessage;
             }
           }
           if (!itemDiscountFound) {
