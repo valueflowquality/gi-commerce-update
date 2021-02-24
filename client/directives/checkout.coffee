@@ -134,7 +134,7 @@ angular.module('gi.commerce').directive 'giCheckout'
           #  Checking, that the user has access to the information about this asset and refreshing the information if present
           if cartItemsPresent
             for item in $scope.cartItems
-              if item._data._id == asset._id
+              if item._data._id == asset._id && asset.priceId
                 item.setData asset
                 item.setName asset.displayName
                 item.setPriceList PriceList.getCached(asset.priceId)
