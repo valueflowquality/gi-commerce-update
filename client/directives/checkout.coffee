@@ -115,17 +115,51 @@ angular.module('gi.commerce').directive 'giCheckout'
 
     $scope.$watch 'model.assets[0]._id', () ->
       itemDiscountFound = false
+
       if $scope.model.assets
+        removedItemString = ""
+        itemsToRemove = []
+        cartItemsPresent = $scope.cartItems?.length > 0
+
+        # Resetting the flag for whether or not the cart items are present in the provided asset information to the user
+        if cartItemsPresent
+          for item in $scope.cartItems?.length > 0
+            item.present = false
+
         for asset in $scope.model.assets
           if asset.owned && asset.appliesItemDiscount
             $scope.discountItemOwned = true
             itemDiscountFound = true
 
-          for item in $scope.cartItems
-            if item._data._id == asset._id
-              item.setData asset
-              item.setName asset.displayName
-              item.setPriceList PriceList.getCached(asset.priceId)
+          #  Checking, that the user has access to the information about this asset and refreshing the information if present
+          if cartItemsPresent
+            for item in $scope.cartItems
+              if item._data._id == asset._id
+                item.setData asset
+                item.setName asset.displayName
+                item.setPriceList PriceList.getCached(asset.priceId)
+                item.present = true
+
+        # If the asset information is not present, removing the item from the cart and generating a message about the removal
+        if cartItemsPresent
+          for item, index in $scope.cartItems
+            if !item.present
+              removedItemString += ", " + item.getName()
+              itemsToRemove.push(index)
+
+        if itemsToRemove.length > 0
+          for removeIndex in itemsToRemove.reverse()
+            $scope.cart.removeItem(removeIndex)
+
+          removedItemString = removedItemString.substring(2)
+          if itemsToRemove.length > 1
+            # For displaying a message for multiple removed assets using plurals
+            removalMessage = "The information about items " + removedItemString + " could not be found and the items have been removed from your cart."
+          else
+            # For displaying a message for a single removed asset
+            removalMessage = "The information about the item " + removedItemString + " could not be found and the item has been removed from your cart."
+
+          $scope.errorMessage = removalMessage
 
       if !itemDiscountFound
         $scope.discountItemOwned = false
